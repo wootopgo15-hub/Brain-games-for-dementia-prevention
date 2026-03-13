@@ -25,6 +25,7 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('LOGIN');
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [scores, setScores] = useState<ScoreEntry[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Load scores from local storage on mount
   useEffect(() => {
@@ -48,25 +49,66 @@ function App() {
     setCurrentScreen('LOGIN');
   };
 
-  const saveScore = (game: string, score: number) => {
-    if (!currentUser || score <= 0) return;
+  const saveScore = async (game: string, score: number) => {
+    if (!currentUser) {
+      setCurrentScreen('LOGIN');
+      return;
+    }
 
-    const userName = currentUser.type === 'INDIVIDUAL' ? currentUser.name : '센터관리자';
-    const centerName = currentUser.type === 'INDIVIDUAL' ? currentUser.center : currentUser.name;
+    if (score > 0) {
+      const userName = currentUser.type === 'INDIVIDUAL' ? currentUser.name : '센터관리자';
+      const centerName = currentUser.type === 'INDIVIDUAL' ? currentUser.center : currentUser.name;
 
-    const newScore: ScoreEntry = {
-      id: Math.random().toString(36).substr(2, 9),
-      userType: currentUser.type,
-      userName,
-      centerName,
-      game,
-      score,
-      timestamp: Date.now(),
-    };
+      const newScore: ScoreEntry = {
+        id: Math.random().toString(36).substr(2, 9),
+        userType: currentUser.type,
+        userName,
+        centerName,
+        game,
+        score,
+        timestamp: Date.now(),
+      };
 
-    const updatedScores = [...scores, newScore];
-    setScores(updatedScores);
-    localStorage.setItem('brain_game_scores', JSON.stringify(updatedScores));
+      const updatedScores = [...scores, newScore];
+      setScores(updatedScores);
+      localStorage.setItem('brain_game_scores', JSON.stringify(updatedScores));
+
+      // Send to Google Sheets if Web App URL is configured
+      let googleSheetUrl = import.meta.env.VITE_GOOGLE_SHEET_WEB_APP_URL;
+      
+      // Fallback to default URL if the environment variable is missing or looks invalid (e.g., just a number)
+      if (!googleSheetUrl || !googleSheetUrl.startsWith('http')) {
+        googleSheetUrl = 'https://script.google.com/macros/s/AKfycbw7Gb1OX0iXMlyJoBZef443mEpJ6_Z0mVd4biGALRhUWsGNErH90dF9jsYvsd01d8DG/exec';
+      }
+
+      if (googleSheetUrl) {
+        fetch(googleSheetUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify({
+            mode: 'APPEND',
+            type: 'GAME_SCORE',
+            '참가유형': newScore.userType === 'INDIVIDUAL' ? '개인' : '센터',
+            '이름': newScore.userName,
+            '생년월일': currentUser.type === 'INDIVIDUAL' ? currentUser.birth : '',
+            '소속센터': newScore.centerName,
+            '게임종류': newScore.game,
+            '점수': newScore.score
+          }),
+        }).then(() => {
+          setToastMessage('점수가 구글 시트에 저장되었습니다!');
+          setTimeout(() => setToastMessage(null), 3000);
+        }).catch(error => {
+          console.error('Failed to save score to Google Sheets:', error);
+        });
+      }
+    }
+
+    // Switch to ranking screen after saving (or if score is 0)
+    setCurrentScreen('RANKING');
   };
 
   const getUserKey = (user: UserData) => `${user.type}-${user.name}-${user.type === 'INDIVIDUAL' ? user.center : ''}`;
@@ -134,6 +176,20 @@ function App() {
           {currentScreen === 'MATH' && <MathGame key="math" initialLevel={getSavedLevel('MATH')} onSaveLevel={(l) => saveLevel('MATH', l)} onFinish={(s) => saveScore('사칙연산', s)} />}
         </AnimatePresence>
       </main>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg z-50 font-medium"
+          >
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -459,7 +515,7 @@ function LevelComplete({ level, score, onNext, isGameOver, isLevelClear, totalSc
             <p className="text-xl font-bold text-slate-600 mb-6">+{score}점 획득 (현재 총점: {totalScore}점)</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button onClick={onFinish} className="px-6 py-3 bg-slate-500 text-white rounded-full font-bold hover:bg-slate-600 transition-colors shadow-md w-full sm:w-auto">
-                그만하고 저장
+                결과 저장하기
               </button>
               <button onClick={onNext} className="px-6 py-3 bg-emerald-500 text-white rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-md w-full sm:w-auto">
                 다음 단계로
@@ -524,8 +580,13 @@ function NumberGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score:
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md flex flex-col items-center relative min-h-[400px]">
-      <div className="flex justify-between w-full mb-4 px-4">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
         <div className="text-lg font-bold text-indigo-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
         <div className="text-lg font-bold text-slate-600">점수: {score}</div>
       </div>
       <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-slate-800 text-center">1부터 {getTargetCount(level)}까지 순서대로 누르세요</h2>
@@ -617,8 +678,13 @@ function PictureGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md flex flex-col items-center relative min-h-[400px]">
-      <div className="flex justify-between w-full mb-4 px-4">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
         <div className="text-lg font-bold text-emerald-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
         <div className="text-lg font-bold text-slate-600">점수: {score}</div>
       </div>
       <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-slate-800 text-center">같은 그림을 찾으세요</h2>
@@ -718,8 +784,13 @@ function PuzzleGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score:
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md flex flex-col items-center relative min-h-[400px]">
-      <div className="flex justify-between w-full mb-4 px-4">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
         <div className="text-lg font-bold text-amber-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
         <div className="text-lg font-bold text-slate-600">점수: {score}</div>
       </div>
       <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-slate-800 text-center">순서대로 맞추세요</h2>
@@ -792,8 +863,13 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md flex flex-col items-center relative min-h-[400px]">
-      <div className="flex justify-between w-full mb-4 px-4">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
         <div className="text-lg font-bold text-rose-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
         <div className="text-lg font-bold text-slate-600">점수: {score}</div>
       </div>
       <h2 className="text-lg sm:text-xl font-bold mb-2 text-slate-800 text-center">글자의 <span className="text-rose-500">색상</span>을 맞추세요</h2>
@@ -898,8 +974,13 @@ function PatternGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md flex flex-col items-center relative min-h-[400px]">
-      <div className="flex justify-between w-full mb-4 px-4">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
         <div className="text-lg font-bold text-purple-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
         <div className="text-lg font-bold text-slate-600">점수: {score}</div>
       </div>
       <h2 className="text-lg sm:text-xl font-bold mb-2 text-slate-800 text-center">패턴 기억 게임</h2>
@@ -990,8 +1071,13 @@ function MathGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: n
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md flex flex-col items-center relative min-h-[400px]">
-      <div className="flex justify-between w-full mb-4 px-4">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
         <div className="text-lg font-bold text-cyan-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
         <div className="text-lg font-bold text-slate-600">점수: {score}</div>
       </div>
       <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-slate-800 text-center">두뇌 회전 사칙연산</h2>
