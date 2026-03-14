@@ -1,10 +1,14 @@
-@import "tailwindcss";
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+*/
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+export const INITIAL_PLACEHOLDERS = [
+    "Design a minimalist weather card",
+    "Show me a live stock ticker",
+    "Create a futuristic login form",
+    "Build a stock portfolio dashboard",
+    "Make a brutalist music player",
+    "Generate a sleek pricing table",
+    "Ask for anything"
+];

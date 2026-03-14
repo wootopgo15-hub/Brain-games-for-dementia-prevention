@@ -3,4 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-export const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
+export interface Artifact {
+  id: string;
+  styleName: string;
+  html: string;
+  status: 'streaming' | 'complete' | 'error';
+}
+
+export interface Session {
+    id: string;
+    prompt: string;
+    timestamp: number;
+    artifacts: Artifact[];
+}
+
+export interface ComponentVariation { name: string; html: string; }
+export interface LayoutOption { name: string; css: string; previewHtml: string; }

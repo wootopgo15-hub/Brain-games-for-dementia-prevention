@@ -1,29 +1,20 @@
-<!DOCTYPE html>
-<html>
-<body>
-<script>
-const url = 'https://script.google.com/macros/s/AKfycbw7Gb1OX0iXMlyJoBZef443mEpJ6_Z0mVd4biGALRhUWsGNErH90dF9jsYvsd01d8DG/exec';
-const data = {
-  mode: 'APPEND',
-  type: 'GAME_SCORE',
-  '참가유형': '개인',
-  '이름': '브라우저테스트',
-  '생년월일': '20000101',
-  '소속센터': '테스트센터',
-  '게임종류': '숫자 기억',
-  '점수': 555
-};
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-fetch(url, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'text/plain;charset=utf-8',
-  },
-  body: JSON.stringify(data)
-})
-.then(res => res.text())
-.then(text => console.log('Response:', text))
-.catch(err => console.error('Error:', err));
-</script>
-</body>
-</html>
+# Run and deploy your AI Studio app
+
+This contains everything you need to run your app locally.
+
+View your app in AI Studio: https://ai.studio/apps/1b367c92-48f1-4822-8df6-1b5e7a5e4abf
+
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

@@ -1,28 +1,6 @@
 {
-  "name": "flash-ui",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@google/genai": "^0.7.0",
-    "clsx": "^2.1.1",
-    "framer-motion": "^12.35.2",
-    "lucide-react": "^0.577.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tailwind-merge": "^3.5.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.2.1",
-    "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "tailwindcss": "^4.2.1",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
-  }
+  "name": "치매 예방 두뇌 게임",
+  "description": "Put Gemini 3 Flash's creativity and coding abilities to the test. Rapidly generate UI, explore variations, and export code.",
+  "requestFramePermissions": [],
+  "prompt": ""
 }

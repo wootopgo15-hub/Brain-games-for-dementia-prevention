@@ -2,12 +2,12 @@ const url = 'https://script.google.com/macros/s/AKfycbw7Gb1OX0iXMlyJoBZef443mEpJ
 const data = {
   mode: 'APPEND',
   type: 'GAME_SCORE',
-  '참가유형': '개인',
-  '이름': '테스트유저2',
-  '생년월일': '20000101',
+  '참가유형': '센터',
+  '이름': '테스트센터',
+  '생년월일': '',
   '소속센터': '테스트센터',
   '게임종류': '숫자 기억',
-  '점수': 777
+  '점수': 888
 };
 
 fetch(url, {

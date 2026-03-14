@@ -1,21 +1,29 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
-*/
-
-export interface Artifact {
-  id: string;
-  styleName: string;
-  html: string;
-  status: 'streaming' | 'complete' | 'error';
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ],
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  }
 }
-
-export interface Session {
-    id: string;
-    prompt: string;
-    timestamp: number;
-    artifacts: Artifact[];
-}
-
-export interface ComponentVariation { name: string; html: string; }
-export interface LayoutOption { name: string; css: string; previewHtml: string; }
