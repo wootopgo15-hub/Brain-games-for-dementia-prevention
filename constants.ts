@@ -1,24 +1,14 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+*/
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+export const INITIAL_PLACEHOLDERS = [
+    "Design a minimalist weather card",
+    "Show me a live stock ticker",
+    "Create a futuristic login form",
+    "Build a stock portfolio dashboard",
+    "Make a brutalist music player",
+    "Generate a sleek pricing table",
+    "Ask for anything"
+];
