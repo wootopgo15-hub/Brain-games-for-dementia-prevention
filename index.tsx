@@ -312,7 +312,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
-      <header className="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+      <header className="bg-white shadow-sm px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-2">
           {currentScreen !== 'LOGIN' && currentScreen !== 'HOME' && (
             <button 
