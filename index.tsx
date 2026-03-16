@@ -115,13 +115,14 @@ function AdModal({ type, onClose }: { type: 'ENTRY' | 'EXIT', onClose: () => voi
 }
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('LOGIN');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('HOME');
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [scores, setScores] = useState<ScoreEntry[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showEntryAd, setShowEntryAd] = useState(false);
   const [showExitAd, setShowExitAd] = useState(false);
   const [pendingUser, setPendingUser] = useState<UserData | null>(null);
+  const [pendingScore, setPendingScore] = useState<{game: string, score: number} | null>(null);
 
   const fetchScoresFromSheet = async () => {
     let googleSheetUrl = import.meta.env.VITE_GOOGLE_SHEET_WEB_APP_URL;
@@ -200,7 +201,12 @@ function App() {
       setShowEntryAd(true);
     } else {
       setCurrentUser(user);
-      setCurrentScreen('HOME');
+      if (pendingScore) {
+        executeSaveScore(user, pendingScore.game, pendingScore.score);
+        setPendingScore(null);
+      } else {
+        setCurrentScreen('HOME');
+      }
     }
   };
 
@@ -209,7 +215,7 @@ function App() {
       setShowExitAd(true);
     } else {
       setCurrentUser(null);
-      setCurrentScreen('LOGIN');
+      setCurrentScreen('HOME');
     }
   };
 
@@ -217,7 +223,12 @@ function App() {
     setShowEntryAd(false);
     if (pendingUser) {
       setCurrentUser(pendingUser);
-      setCurrentScreen('HOME');
+      if (pendingScore) {
+        executeSaveScore(pendingUser, pendingScore.game, pendingScore.score);
+        setPendingScore(null);
+      } else {
+        setCurrentScreen('HOME');
+      }
       setPendingUser(null);
     }
   };
@@ -225,22 +236,18 @@ function App() {
   const closeExitAd = () => {
     setShowExitAd(false);
     setCurrentUser(null);
-    setCurrentScreen('LOGIN');
+    setCurrentScreen('HOME');
   };
 
-  const saveScore = async (game: string, score: number) => {
-    if (!currentUser) {
-      setCurrentScreen('LOGIN');
-      return;
-    }
-
+  const executeSaveScore = async (user: UserData | null, game: string, score: number) => {
     if (score > 0) {
-      const userName = currentUser.type === 'INDIVIDUAL' ? currentUser.name : '센터관리자';
-      const centerName = currentUser.type === 'INDIVIDUAL' ? currentUser.center : currentUser.name;
+      const userName = user ? (user.type === 'INDIVIDUAL' ? user.name : '센터관리자') : '게스트';
+      const centerName = user ? (user.type === 'INDIVIDUAL' ? user.center : user.name) : '방문자';
+      const userType = user ? user.type : 'INDIVIDUAL';
 
       const newScore: ScoreEntry = {
         id: Math.random().toString(36).substr(2, 9),
-        userType: currentUser.type,
+        userType,
         userName,
         centerName,
         game,
@@ -272,7 +279,7 @@ function App() {
             type: 'GAME_SCORE',
             '참가유형': newScore.userType === 'INDIVIDUAL' ? '개인' : '센터',
             '이름': newScore.userName,
-            '생년월일': currentUser.type === 'INDIVIDUAL' ? currentUser.birth : '',
+            '생년월일': user && user.type === 'INDIVIDUAL' ? user.birth : '',
             '소속센터': newScore.centerName,
             '게임종류': newScore.game,
             '점수': newScore.score
@@ -288,6 +295,15 @@ function App() {
 
     // Switch to ranking screen after saving (or if score is 0)
     setCurrentScreen('RANKING');
+  };
+
+  const saveScore = async (game: string, score: number) => {
+    if (!currentUser) {
+      setPendingScore({ game, score });
+      setCurrentScreen('LOGIN');
+      return;
+    }
+    executeSaveScore(currentUser, game, score);
   };
 
   const getUserKey = (user: UserData) => `${user.type}-${user.name}-${user.type === 'INDIVIDUAL' ? user.center : ''}`;
@@ -326,7 +342,7 @@ function App() {
           <h1 className="text-xl font-bold text-slate-800">치매 예방 두뇌 게임</h1>
         </div>
         
-        {currentUser && (
+        {currentUser ? (
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full">
               {currentUser.type === 'INDIVIDUAL' ? <User size={16} /> : <Building size={16} />}
@@ -338,12 +354,30 @@ function App() {
               <LogOut size={20} />
             </button>
           </div>
-        )}
+        ) : currentScreen !== 'LOGIN' ? (
+          <button onClick={() => setCurrentScreen('LOGIN')} className="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition-colors">
+            로그인
+          </button>
+        ) : null}
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
         <AnimatePresence mode="wait">
-          {currentScreen === 'LOGIN' && <LoginScreen key="login" onLogin={handleLogin} />}
+          {currentScreen === 'LOGIN' && (
+            <LoginScreen 
+              key="login" 
+              onLogin={handleLogin} 
+              onCancel={() => {
+                if (pendingScore) {
+                  executeSaveScore(null, pendingScore.game, pendingScore.score);
+                  setPendingScore(null);
+                } else {
+                  setCurrentScreen('HOME');
+                }
+              }}
+              cancelText={pendingScore ? "게스트로 점수 저장하기" : "다음에 하기"}
+            />
+          )}
           {currentScreen === 'HOME' && <HomeScreen key="home" onNavigate={setCurrentScreen} currentUser={currentUser!} />}
           {currentScreen === 'RANKING' && <RankingScreen key="ranking" scores={scores} onRefresh={fetchScoresFromSheet} />}
           
@@ -459,7 +493,7 @@ function HomeScreen({ onNavigate, currentUser }: { onNavigate: (s: Screen) => vo
 }
 
 // --- Login Screen ---
-function LoginScreen({ onLogin }: { onLogin: (user: UserData) => void }) {
+function LoginScreen({ onLogin, onCancel, cancelText }: { onLogin: (user: UserData) => void, onCancel?: () => void, cancelText?: string }) {
   const [tab, setTab] = useState<'INDIVIDUAL' | 'CENTER'>('INDIVIDUAL');
   
   // Individual State
@@ -492,13 +526,13 @@ function LoginScreen({ onLogin }: { onLogin: (user: UserData) => void }) {
           onClick={() => setTab('INDIVIDUAL')}
           className={clsx("flex-1 py-4 text-center font-bold transition-colors", tab === 'INDIVIDUAL' ? "bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600" : "text-slate-500 hover:bg-slate-50")}
         >
-          개인전 참가
+          개인전 저장
         </button>
         <button 
           onClick={() => setTab('CENTER')}
           className={clsx("flex-1 py-4 text-center font-bold transition-colors", tab === 'CENTER' ? "bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600" : "text-slate-500 hover:bg-slate-50")}
         >
-          센터 로그인
+          센터 저장
         </button>
       </div>
 
@@ -518,7 +552,7 @@ function LoginScreen({ onLogin }: { onLogin: (user: UserData) => void }) {
               <input type="text" required value={center} onChange={e => setCenter(e.target.value)} placeholder="행복치매예방센터" className="w-full p-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all" />
             </div>
             <button type="submit" className="mt-4 w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-md hover:shadow-lg">
-              입장하기
+              저장하기
             </button>
           </form>
         ) : (
@@ -532,9 +566,15 @@ function LoginScreen({ onLogin }: { onLogin: (user: UserData) => void }) {
               <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full p-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all" />
             </div>
             <button type="submit" className="mt-4 w-full py-4 bg-slate-800 text-white rounded-xl font-bold text-lg hover:bg-slate-900 active:scale-[0.98] transition-all shadow-md hover:shadow-lg">
-              관리자 로그인
+              저장하기
             </button>
           </form>
+        )}
+        
+        {onCancel && (
+          <button onClick={onCancel} type="button" className="mt-4 w-full py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">
+            {cancelText || '다음에 하기'}
+          </button>
         )}
       </div>
     </motion.div>
