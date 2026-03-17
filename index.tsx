@@ -40,7 +40,7 @@ function AdSenseAd() {
     <ins className="adsbygoogle"
          style={{ display: 'block', width: '100%', height: '100%' }}
          data-ad-client="ca-pub-7204177319630647"
-         data-ad-format="auto"
+         data-ad-format="rectangle"
          data-full-width-responsive="true"></ins>
   );
 }
@@ -66,7 +66,7 @@ function AdModal({ type, onClose }: { type: 'ENTRY' | 'EXIT', onClose: () => voi
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className={`bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col relative w-full max-w-sm ${type === 'EXIT' ? 'h-[80vh] max-h-[600px]' : ''}`}
+        className="bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col relative w-full max-w-sm"
       >
         <div className="p-4 bg-slate-100 border-b border-slate-200 flex justify-between items-center">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Advertisement</span>
@@ -79,35 +79,17 @@ function AdModal({ type, onClose }: { type: 'ENTRY' | 'EXIT', onClose: () => voi
           </button>
         </div>
         <div className="flex-1 p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-indigo-50 to-purple-50">
-          {type === 'ENTRY' ? (
-            <>
-              <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mb-4 text-indigo-500 shadow-inner">
-                <Trophy size={40} />
-              </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">개인전 랭킹 도전!</h3>
-              <p className="text-slate-600 text-sm">
-                매일매일 두뇌 훈련하고<br/>
-                전국 어르신들과 순위를 겨뤄보세요!
-              </p>
-              <div className="mt-6 p-4 bg-white rounded-xl border border-indigo-100 shadow-sm w-full min-h-[100px] flex items-center justify-center overflow-hidden">
-                <AdSenseAd />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="w-24 h-24 bg-rose-100 rounded-full flex items-center justify-center mb-6 text-rose-500 shadow-inner">
-                <Heart size={48} />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-800 mb-3">오늘도 수고하셨습니다!</h3>
-              <p className="text-slate-600 mb-8">
-                꾸준한 두뇌 훈련이<br/>
-                건강한 내일을 만듭니다.
-              </p>
-              <div className="mt-auto p-4 bg-white rounded-2xl border border-rose-100 shadow-md w-full min-h-[200px] flex items-center justify-center overflow-hidden">
-                <AdSenseAd />
-              </div>
-            </>
-          )}
+          <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mb-4 text-indigo-500 shadow-inner">
+            <Trophy size={40} />
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 mb-2">개인전 랭킹 도전!</h3>
+          <p className="text-slate-600 text-sm">
+            매일매일 두뇌 훈련하고<br/>
+            전국 어르신들과 순위를 겨뤄보세요!
+          </p>
+          <div className="mt-6 p-4 bg-white rounded-xl border border-indigo-100 shadow-sm w-full aspect-square flex items-center justify-center overflow-hidden">
+            <AdSenseAd />
+          </div>
         </div>
       </motion.div>
     </motion.div>
@@ -115,14 +97,13 @@ function AdModal({ type, onClose }: { type: 'ENTRY' | 'EXIT', onClose: () => voi
 }
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('HOME');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('LOGIN');
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [scores, setScores] = useState<ScoreEntry[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showEntryAd, setShowEntryAd] = useState(false);
   const [showExitAd, setShowExitAd] = useState(false);
   const [pendingUser, setPendingUser] = useState<UserData | null>(null);
-  const [pendingScore, setPendingScore] = useState<{game: string, score: number} | null>(null);
 
   const fetchScoresFromSheet = async () => {
     let googleSheetUrl = import.meta.env.VITE_GOOGLE_SHEET_WEB_APP_URL;
@@ -201,12 +182,7 @@ function App() {
       setShowEntryAd(true);
     } else {
       setCurrentUser(user);
-      if (pendingScore) {
-        executeSaveScore(user, pendingScore.game, pendingScore.score);
-        setPendingScore(null);
-      } else {
-        setCurrentScreen('HOME');
-      }
+      setCurrentScreen('HOME');
     }
   };
 
@@ -215,7 +191,7 @@ function App() {
       setShowExitAd(true);
     } else {
       setCurrentUser(null);
-      setCurrentScreen('HOME');
+      setCurrentScreen('LOGIN');
     }
   };
 
@@ -223,12 +199,7 @@ function App() {
     setShowEntryAd(false);
     if (pendingUser) {
       setCurrentUser(pendingUser);
-      if (pendingScore) {
-        executeSaveScore(pendingUser, pendingScore.game, pendingScore.score);
-        setPendingScore(null);
-      } else {
-        setCurrentScreen('HOME');
-      }
+      setCurrentScreen('HOME');
       setPendingUser(null);
     }
   };
@@ -236,18 +207,22 @@ function App() {
   const closeExitAd = () => {
     setShowExitAd(false);
     setCurrentUser(null);
-    setCurrentScreen('HOME');
+    setCurrentScreen('LOGIN');
   };
 
-  const executeSaveScore = async (user: UserData | null, game: string, score: number) => {
+  const saveScore = async (game: string, score: number) => {
+    if (!currentUser) {
+      setCurrentScreen('LOGIN');
+      return;
+    }
+
     if (score > 0) {
-      const userName = user ? (user.type === 'INDIVIDUAL' ? user.name : '센터관리자') : '게스트';
-      const centerName = user ? (user.type === 'INDIVIDUAL' ? user.center : user.name) : '방문자';
-      const userType = user ? user.type : 'INDIVIDUAL';
+      const userName = currentUser.type === 'INDIVIDUAL' ? currentUser.name : '센터관리자';
+      const centerName = currentUser.type === 'INDIVIDUAL' ? currentUser.center : currentUser.name;
 
       const newScore: ScoreEntry = {
         id: Math.random().toString(36).substr(2, 9),
-        userType,
+        userType: currentUser.type,
         userName,
         centerName,
         game,
@@ -279,7 +254,7 @@ function App() {
             type: 'GAME_SCORE',
             '참가유형': newScore.userType === 'INDIVIDUAL' ? '개인' : '센터',
             '이름': newScore.userName,
-            '생년월일': user && user.type === 'INDIVIDUAL' ? user.birth : '',
+            '생년월일': currentUser.type === 'INDIVIDUAL' ? currentUser.birth : '',
             '소속센터': newScore.centerName,
             '게임종류': newScore.game,
             '점수': newScore.score
@@ -295,15 +270,6 @@ function App() {
 
     // Switch to ranking screen after saving (or if score is 0)
     setCurrentScreen('RANKING');
-  };
-
-  const saveScore = async (game: string, score: number) => {
-    if (!currentUser) {
-      setPendingScore({ game, score });
-      setCurrentScreen('LOGIN');
-      return;
-    }
-    executeSaveScore(currentUser, game, score);
   };
 
   const getUserKey = (user: UserData) => `${user.type}-${user.name}-${user.type === 'INDIVIDUAL' ? user.center : ''}`;
@@ -342,7 +308,7 @@ function App() {
           <h1 className="text-xl font-bold text-slate-800">치매 예방 두뇌 게임</h1>
         </div>
         
-        {currentUser ? (
+        {currentUser && (
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full">
               {currentUser.type === 'INDIVIDUAL' ? <User size={16} /> : <Building size={16} />}
@@ -354,30 +320,12 @@ function App() {
               <LogOut size={20} />
             </button>
           </div>
-        ) : currentScreen !== 'LOGIN' ? (
-          <button onClick={() => setCurrentScreen('LOGIN')} className="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full hover:bg-indigo-100 transition-colors">
-            로그인
-          </button>
-        ) : null}
+        )}
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
         <AnimatePresence mode="wait">
-          {currentScreen === 'LOGIN' && (
-            <LoginScreen 
-              key="login" 
-              onLogin={handleLogin} 
-              onCancel={() => {
-                if (pendingScore) {
-                  executeSaveScore(null, pendingScore.game, pendingScore.score);
-                  setPendingScore(null);
-                } else {
-                  setCurrentScreen('HOME');
-                }
-              }}
-              cancelText={pendingScore ? "게스트로 점수 저장하기" : "다음에 하기"}
-            />
-          )}
+          {currentScreen === 'LOGIN' && <LoginScreen key="login" onLogin={handleLogin} />}
           {currentScreen === 'HOME' && <HomeScreen key="home" onNavigate={setCurrentScreen} currentUser={currentUser!} />}
           {currentScreen === 'RANKING' && <RankingScreen key="ranking" scores={scores} onRefresh={fetchScoresFromSheet} />}
           
@@ -493,46 +441,84 @@ function HomeScreen({ onNavigate, currentUser }: { onNavigate: (s: Screen) => vo
 }
 
 // --- Login Screen ---
-function LoginScreen({ onLogin, onCancel, cancelText }: { onLogin: (user: UserData) => void, onCancel?: () => void, cancelText?: string }) {
-  const [tab, setTab] = useState<'INDIVIDUAL' | 'CENTER'>('INDIVIDUAL');
+function LoginScreen({ onLogin }: { onLogin: (user: UserData) => void }) {
+  const [tab, setTab] = useState<'INDIVIDUAL' | 'CENTER'>('CENTER');
   
   // Individual State
   const [name, setName] = useState('');
   const [birth, setBirth] = useState('');
   const [center, setCenter] = useState('');
+  const [recentIndividuals, setRecentIndividuals] = useState<{name: string, birth: string, center: string}[]>([]);
 
   // Center State
   const [centerName, setCenterName] = useState('');
-  const [password, setPassword] = useState('');
+  const [recentCenters, setRecentCenters] = useState<string[]>([]);
+
+  useEffect(() => {
+    const savedCenters = localStorage.getItem('brain_game_recent_centers');
+    if (savedCenters) {
+      try {
+        setRecentCenters(JSON.parse(savedCenters));
+      } catch (e) {
+        console.error("Failed to parse recent centers", e);
+      }
+    }
+
+    const savedIndividuals = localStorage.getItem('brain_game_recent_individuals');
+    if (savedIndividuals) {
+      try {
+        setRecentIndividuals(JSON.parse(savedIndividuals));
+      } catch (e) {
+        console.error("Failed to parse recent individuals", e);
+      }
+    }
+  }, []);
 
   const handleIndividualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name && birth && center) {
+      const newInd = { name, birth, center };
+      const updatedInds = [newInd, ...recentIndividuals.filter(i => !(i.name === name && i.birth === birth && i.center === center))].slice(0, 5);
+      setRecentIndividuals(updatedInds);
+      localStorage.setItem('brain_game_recent_individuals', JSON.stringify(updatedInds));
       onLogin({ type: 'INDIVIDUAL', name, birth, center });
     }
   };
 
   const handleCenterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (centerName && password) {
+    if (centerName) {
+      const updatedCenters = [centerName, ...recentCenters.filter(c => c !== centerName)].slice(0, 5);
+      setRecentCenters(updatedCenters);
+      localStorage.setItem('brain_game_recent_centers', JSON.stringify(updatedCenters));
       onLogin({ type: 'CENTER', name: centerName });
     }
+  };
+
+  const handleRecentCenterClick = (name: string) => {
+    setCenterName(name);
+  };
+
+  const handleRecentIndividualClick = (ind: {name: string, birth: string, center: string}) => {
+    setName(ind.name);
+    setBirth(ind.birth);
+    setCenter(ind.center);
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
       <div className="flex border-b border-slate-100">
         <button 
-          onClick={() => setTab('INDIVIDUAL')}
-          className={clsx("flex-1 py-4 text-center font-bold transition-colors", tab === 'INDIVIDUAL' ? "bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600" : "text-slate-500 hover:bg-slate-50")}
-        >
-          개인전 저장
-        </button>
-        <button 
           onClick={() => setTab('CENTER')}
           className={clsx("flex-1 py-4 text-center font-bold transition-colors", tab === 'CENTER' ? "bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600" : "text-slate-500 hover:bg-slate-50")}
         >
-          센터 저장
+          센터 로그인
+        </button>
+        <button 
+          onClick={() => setTab('INDIVIDUAL')}
+          className={clsx("flex-1 py-4 text-center font-bold transition-colors", tab === 'INDIVIDUAL' ? "bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600" : "text-slate-500 hover:bg-slate-50")}
+        >
+          개인전 참가
         </button>
       </div>
 
@@ -551,8 +537,25 @@ function LoginScreen({ onLogin, onCancel, cancelText }: { onLogin: (user: UserDa
               <label className="block text-sm font-bold text-slate-700 mb-1">소속 센터명</label>
               <input type="text" required value={center} onChange={e => setCenter(e.target.value)} placeholder="행복치매예방센터" className="w-full p-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all" />
             </div>
+            {recentIndividuals.length > 0 && (
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2">최근 로그인한 사용자</label>
+                <div className="flex flex-wrap gap-2">
+                  {recentIndividuals.map((ind, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleRecentIndividualClick(ind)}
+                      className="px-3 py-1.5 bg-slate-100 text-slate-600 text-sm rounded-full hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200"
+                    >
+                      {ind.name} ({ind.center})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <button type="submit" className="mt-4 w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-md hover:shadow-lg">
-              저장하기
+              입장하기
             </button>
           </form>
         ) : (
@@ -561,20 +564,27 @@ function LoginScreen({ onLogin, onCancel, cancelText }: { onLogin: (user: UserDa
               <label className="block text-sm font-bold text-slate-700 mb-1">센터명</label>
               <input type="text" required value={centerName} onChange={e => setCenterName(e.target.value)} placeholder="행복치매예방센터" className="w-full p-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all" />
             </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">비밀번호</label>
-              <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full p-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all" />
-            </div>
+            {recentCenters.length > 0 && (
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2">최근 로그인한 센터</label>
+                <div className="flex flex-wrap gap-2">
+                  {recentCenters.map((name, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleRecentCenterClick(name)}
+                      className="px-3 py-1.5 bg-slate-100 text-slate-600 text-sm rounded-full hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-slate-200"
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <button type="submit" className="mt-4 w-full py-4 bg-slate-800 text-white rounded-xl font-bold text-lg hover:bg-slate-900 active:scale-[0.98] transition-all shadow-md hover:shadow-lg">
-              저장하기
+              관리자 로그인
             </button>
           </form>
-        )}
-        
-        {onCancel && (
-          <button onClick={onCancel} type="button" className="mt-4 w-full py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">
-            {cancelText || '다음에 하기'}
-          </button>
         )}
       </div>
     </motion.div>
