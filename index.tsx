@@ -60,34 +60,38 @@ function AdModal({ type, onClose }: { type: 'ENTRY' | 'EXIT', onClose: () => voi
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
     >
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col relative w-full max-w-sm"
+        className="bg-[#F4F6FF] rounded-xl overflow-hidden shadow-2xl flex flex-col relative w-full max-w-sm"
       >
-        <div className="p-4 bg-slate-100 border-b border-slate-200 flex justify-between items-center">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Advertisement</span>
+        <div className="px-4 py-3 bg-[#F4F6FF] flex justify-between items-center border-b border-blue-100/50">
+          <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider bg-blue-100/50 px-1">Advertisement</span>
           <button 
             onClick={onClose} 
             disabled={timeLeft > 0}
-            className={`text-sm font-bold px-3 py-1 rounded-full transition-colors ${timeLeft > 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-800 text-white hover:bg-slate-700'}`}
+            className={`text-[11px] font-bold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 ${timeLeft > 0 ? 'bg-[#0B215E] text-white cursor-not-allowed' : 'bg-[#0B215E] text-white hover:bg-blue-900'}`}
           >
-            {timeLeft > 0 ? `${timeLeft}초 후 닫기` : '닫기 (X)'}
+            {timeLeft > 0 ? `닫기 0${timeLeft}` : '닫기 (X)'}
           </button>
         </div>
-        <div className="flex-1 p-6 flex flex-col items-center justify-center text-center bg-gradient-to-br from-indigo-50 to-purple-50">
-          <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mb-4 text-indigo-500 shadow-inner">
-            <Trophy size={40} />
+        <div className="flex-1 p-6 flex flex-col items-center justify-center text-center">
+          <div className="w-16 h-16 bg-blue-100/50 rounded-full flex items-center justify-center mb-5 text-blue-500">
+            <Trophy size={28} />
           </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-2">개인전 랭킹 도전!</h3>
-          <p className="text-slate-600 text-sm">
-            매일매일 두뇌 훈련하고<br/>
-            전국 어르신들과 순위를 겨뤄보세요!
-          </p>
-          <div className="mt-6 p-4 bg-white rounded-xl border border-indigo-100 shadow-sm w-full aspect-square flex items-center justify-center overflow-hidden">
+          <div className="flex flex-col items-center gap-1 mb-6">
+            <h3 className="text-lg font-bold text-white bg-blue-500 px-2 py-0.5">개인전 랭킹 도전!</h3>
+            <p className="text-white bg-blue-500 px-2 py-0.5 text-[13px] mt-1">
+              매일매일 두뇌 훈련하고
+            </p>
+            <p className="text-white bg-blue-500 px-2 py-0.5 text-[13px]">
+              전국 어르신들과 순위를 겨뤄보세요!
+            </p>
+          </div>
+          <div className="p-2 bg-white rounded-lg shadow-sm w-full aspect-square flex items-center justify-center overflow-hidden">
             <AdSenseAd />
           </div>
         </div>
@@ -260,7 +264,7 @@ function App() {
             '점수': newScore.score
           }),
         }).then(() => {
-          setToastMessage('점수가 구글 시트에 저장되었습니다!');
+          setToastMessage('점수가 저장되었습니다!');
           setTimeout(() => setToastMessage(null), 3000);
         }).catch(error => {
           console.warn('Failed to save score to Google Sheets:', error);
@@ -855,7 +859,7 @@ function NumberGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score:
         {numbers.map((num, i) => {
           const isHidden = num === null || num < currentTarget;
           return (
-            <button key={i} disabled={isHidden || isLevelClear} onClick={() => handleNumberClick(num)}
+            <button key={i} disabled={isHidden || isLevelClear} onPointerDown={() => handleNumberClick(num)}
               className={clsx("rounded-2xl text-2xl sm:text-3xl font-bold flex items-center justify-center transition-all duration-300",
                 isHidden ? "bg-transparent text-transparent shadow-none" : "bg-indigo-500 text-white shadow-md hover:bg-indigo-600 hover:scale-105 active:scale-95"
               )}>
@@ -951,7 +955,7 @@ function PictureGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score
 
       <div className="grid grid-cols-4 gap-2 w-full">
         {cards.map((card, i) => (
-          <button key={card.id} onClick={() => handleCardClick(i)} disabled={card.isMatched || card.isFlipped || isLevelClear}
+          <button key={card.id} onPointerDown={() => handleCardClick(i)} disabled={card.isMatched || card.isFlipped || isLevelClear}
             className={clsx("rounded-2xl text-3xl sm:text-4xl flex items-center justify-center transition-all duration-500 transform-gpu aspect-square",
               card.isMatched ? "bg-slate-200 opacity-50" : card.isFlipped ? "bg-white shadow-md rotate-y-180" : "bg-emerald-500 shadow-md hover:bg-emerald-600"
             )} style={{ perspective: '1000px' }}>
@@ -1057,7 +1061,7 @@ function PuzzleGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score:
 
       <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full aspect-square bg-slate-200 p-1.5 sm:p-2 rounded-2xl">
         {tiles.map((tile, i) => (
-          <button key={i} onClick={() => handleTileClick(i)} disabled={tile === 0 || isLevelClear}
+          <button key={i} onPointerDown={() => handleTileClick(i)} disabled={tile === 0 || isLevelClear}
             className={clsx("rounded-xl text-3xl sm:text-4xl font-bold flex items-center justify-center transition-all duration-200",
               tile === 0 ? "bg-transparent shadow-none" : "bg-amber-500 text-white shadow-sm hover:bg-amber-600 active:scale-95"
             )}>
@@ -1192,7 +1196,7 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
 
         <div className={`grid ${gridCols} gap-2 sm:gap-3 w-full`}>
           {activeColors.map((c, i) => (
-            <button key={i} onClick={() => handleColorClick(c.name)} disabled={isLevelClear}
+            <button key={i} onPointerDown={() => handleColorClick(c.name)} disabled={isLevelClear}
               className="py-3 rounded-xl text-lg font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
             >
               {c.name}
@@ -1301,7 +1305,7 @@ function PatternGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score
         
         <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full aspect-square max-w-[300px] p-3 sm:p-4 bg-slate-200 rounded-3xl">
           {colors.map((color) => (
-            <button key={color.id} onClick={() => handleBoxClick(color.id)} disabled={isShowingPattern || isLevelClear}
+            <button key={color.id} onPointerDown={() => handleBoxClick(color.id)} disabled={isShowingPattern || isLevelClear}
               className={clsx("rounded-2xl transition-all duration-200 relative",
                 activeBox === color.id ? color.active : color.base,
                 isShowingPattern || isLevelClear ? "cursor-default" : "cursor-pointer active:scale-95"
@@ -1399,7 +1403,7 @@ function MathGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: n
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
           {options.map((opt, i) => (
-            <button key={i} onClick={() => handleAnswer(opt)} disabled={isLevelClear}
+            <button key={i} onPointerDown={() => handleAnswer(opt)} disabled={isLevelClear}
               className="py-4 sm:py-5 rounded-2xl text-2xl sm:text-3xl font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-cyan-50 hover:border-cyan-300 hover:text-cyan-700 active:scale-95 transition-all"
             >
               {opt}
