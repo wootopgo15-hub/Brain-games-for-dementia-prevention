@@ -338,11 +338,12 @@ function App() {
           <Brain className="text-indigo-600" size={28} />
           <h1 className="text-xl font-bold text-slate-800">치매 예방 두뇌 게임</h1>
           <button 
-            onClick={() => window.location.href = 'https://janggo2026-portal-1068844929643.us-west1.run.app'}
-            className="p-2 ml-1 hover:bg-slate-100 rounded-full transition-colors text-slate-600 flex items-center justify-center"
-            title="포털로 돌아가기"
+            onClick={() => window.location.href = 'https://app-janggostory-com.vercel.app'}
+            className="px-3 py-1.5 ml-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600 flex items-center gap-1.5 font-medium text-sm"
+            title="홈으로 돌아가기"
           >
-            <Home size={24} />
+            <Home size={20} />
+            <span>홈으로</span>
           </button>
         </div>
         
@@ -917,6 +918,8 @@ function PictureGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [isLevelClear, setIsLevelClear] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [isShowing, setIsShowing] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const getPairCount = (lvl: number) => Math.min(2 + Math.floor(lvl / 2), 8); // L1: 2, L12+: 8
 
@@ -925,41 +928,66 @@ function PictureGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score
     const selectedEmojis = emojis.slice(0, pairCount);
     const deck = [...selectedEmojis, ...selectedEmojis]
       .sort(() => Math.random() - 0.5)
-      .map((content, i) => ({ id: i, content, isFlipped: false, isMatched: false }));
+      .map((content, i) => ({ id: i, content, isFlipped: true, isMatched: false }));
     setCards(deck);
     setSelectedIndices([]);
     setIsLevelClear(false);
+    setIsShowing(true);
   };
 
   useEffect(() => { initLevel(initialLevel); }, [initialLevel]);
 
+  useEffect(() => {
+    if (isShowing) {
+      timerRef.current = setTimeout(() => {
+        setCards(prev => prev.map(card => ({ ...card, isFlipped: false })));
+        setIsShowing(false);
+      }, 3000);
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [isShowing]);
+
   const handleCardClick = (index: number) => {
-    if (isLevelClear || selectedIndices.length >= 2 || cards[index].isFlipped || cards[index].isMatched) return;
+    if (isShowing || isLevelClear || selectedIndices.length >= 2 || cards[index].isFlipped || cards[index].isMatched) return;
     const newCards = [...cards];
     newCards[index].isFlipped = true;
     setCards(newCards);
+    
     const newSelected = [...selectedIndices, index];
-    setSelectedIndices(newSelected);
 
     if (newSelected.length === 2) {
-      setTimeout(() => {
-        const [first, second] = newSelected;
-        const updatedCards = [...newCards];
-        if (updatedCards[first].content === updatedCards[second].content) {
-          updatedCards[first].isMatched = true; updatedCards[second].isMatched = true;
-        } else {
-          updatedCards[first].isFlipped = false; updatedCards[second].isFlipped = false;
-        }
-        setCards(updatedCards); setSelectedIndices([]);
+      const [first, second] = newSelected;
+      if (newCards[first].content === newCards[second].content) {
+        // 맞았을 때 즉시 처리
+        newCards[first].isMatched = true;
+        newCards[second].isMatched = true;
+        setCards(newCards);
+        setSelectedIndices([]);
         
-        if (updatedCards.every(c => c.isMatched)) {
+        if (newCards.every(c => c.isMatched)) {
           const earned = level * 15;
           setLevelScore(earned);
           setScore(prev => prev + earned);
           setIsLevelClear(true);
           if (level === 50) setIsGameOver(true);
         }
-      }, 800);
+      } else {
+        // 틀렸을 때만 딜레이
+        setSelectedIndices(newSelected);
+        setTimeout(() => {
+          setCards(prev => {
+            const updated = [...prev];
+            updated[first].isFlipped = false;
+            updated[second].isFlipped = false;
+            return updated;
+          });
+          setSelectedIndices([]);
+        }, 500);
+      }
+    } else {
+      setSelectedIndices(newSelected);
     }
   };
 
@@ -981,7 +1009,9 @@ function PictureGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score
         )}
         <div className="text-lg font-bold text-slate-600">점수: {score}</div>
       </div>
-      <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-slate-800 text-center">같은 그림을 찾으세요</h2>
+      <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-slate-800 text-center">
+        {isShowing ? <span className="text-rose-500">3초 동안 그림을 기억하세요!</span> : "같은 그림을 찾으세요"}
+      </h2>
       
       {(isLevelClear || isGameOver) && (
         <LevelComplete level={level} score={levelScore} onNext={nextLevel} isGameOver={isGameOver} isLevelClear={isLevelClear} totalScore={score} onFinish={() => onFinish(score)} />
@@ -1128,7 +1158,7 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
   const [ink, setInk] = useState(COLORS[1]);
   const [isLevelClear, setIsLevelClear] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(7);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [correctCount, setCorrectCount] = useState(0);
 
   const getColorCount = (lvl: number) => {
@@ -1146,7 +1176,7 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
 
   const initLevel = (lvl: number) => {
     setIsLevelClear(false);
-    setTimeLeft(7);
+    setTimeLeft(30);
     setLevelScore(0);
     setCorrectCount(0);
     nextWord(lvl);
@@ -1210,11 +1240,11 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
       </div>
       
       <div className="w-full bg-slate-200 h-2 rounded-full mb-4 overflow-hidden">
-        <div className="bg-rose-500 h-full transition-all duration-100" style={{ width: `${(timeLeft / 7) * 100}%` }} />
+        <div className="bg-rose-500 h-full transition-all duration-100" style={{ width: `${(timeLeft / 30) * 100}%` }} />
       </div>
 
       <h2 className="text-lg sm:text-xl font-bold mb-2 text-slate-800 text-center">글자의 <span className="text-rose-500">색상</span>을 맞추세요</h2>
-      <p className="text-sm sm:text-base text-slate-500 mb-2 text-center">7초 동안 최대한 많이 맞추세요!</p>
+      <p className="text-sm sm:text-base text-slate-500 mb-2 text-center">30초 동안 최대한 많이 맞추세요!</p>
       <p className="text-sm font-bold text-rose-500 mb-4">현재 단계 맞춘 횟수: {correctCount}번</p>
 
       {(isLevelClear || isGameOver) && (
