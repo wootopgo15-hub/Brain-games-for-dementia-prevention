@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
-import { Brain, Hash, Image as ImageIcon, Grid3X3, ArrowLeft, Palette, BrainCircuit, Calculator, Trophy, User, Building, LogOut, Heart, Home } from 'lucide-react';
+import { Brain, Hash, Image as ImageIcon, Grid3X3, ArrowLeft, Palette, BrainCircuit, Calculator, Trophy, User, Users, Building, LogOut, Heart, Home, Search, Hand, Type, ArrowRight, Music, Play, Pause, Volume2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import './index.css';
 
-type Screen = 'LOGIN' | 'HOME' | 'RANKING' | 'NUMBER' | 'PICTURE' | 'PUZZLE' | 'COLOR_WORD' | 'PATTERN' | 'MATH';
+type Screen = 'LOGIN' | 'HOME' | 'RANKING' | 'NUMBER' | 'PICTURE' | 'PUZZLE' | 'COLOR_WORD' | 'PATTERN' | 'MATH' | 'ODD_ONE_OUT' | 'RPS' | 'INITIAL_QUIZ' | 'FLANKER' | 'WORD_MEMORY';
 
 type UserData = 
   | { type: 'INDIVIDUAL'; name: string; birth: string; center: string }
@@ -102,6 +102,142 @@ function AdModal({ type, onClose }: { type: 'ENTRY' | 'EXIT', onClose: () => voi
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+const BGM_TRACKS = [
+  { id: 1, name: '경쾌한 래그타임 (메이플 리프 래그)', url: 'https://www.mfiles.co.uk/mp3-downloads/maple-leaf-rag.mp3' },
+  { id: 2, name: '리드미컬한 피아노 (엔터테이너)', url: 'https://www.mfiles.co.uk/mp3-downloads/the-entertainer.mp3' },
+  { id: 3, name: '빠르고 경쾌한 연주 (터키 행진곡)', url: 'https://www.mfiles.co.uk/mp3-downloads/alla-turca.mp3' },
+  { id: 4, name: '빠른 왈츠 (강아지 왈츠)', url: 'https://www.mfiles.co.uk/mp3-downloads/minute-waltz.mp3' },
+  { id: 5, name: '클래식 피아노 (엘리제를 위하여)', url: 'https://www.mfiles.co.uk/mp3-downloads/fur-elise.mp3' },
+];
+
+function BgmPlayer() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState(BGM_TRACKS[0]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.5);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // 볼륨 조절
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  // 트랙이 변경될 때 오디오 소스 다시 로드 및 재생
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.load(); // 새로운 src를 명시적으로 불러옴
+      if (isPlaying) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => console.log("Audio play failed:", e));
+        }
+      }
+    }
+  }, [currentTrack]);
+
+  // 재생/일시정지 상태 변경 시
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => console.log("Audio play failed:", e));
+        }
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
+
+  return (
+    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 mb-4 w-72 origin-bottom-right"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <Music size={18} className="text-indigo-500" />
+                배경음악
+              </h3>
+              <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-2 mb-4 max-h-48 overflow-y-auto pr-2">
+              {BGM_TRACKS.map(track => (
+                <button
+                  key={track.id}
+                  onClick={() => {
+                    setCurrentTrack(track);
+                    setIsPlaying(true);
+                  }}
+                  className={clsx(
+                    "w-full text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors flex items-center justify-between",
+                    currentTrack.id === track.id
+                      ? "bg-indigo-50 text-indigo-700"
+                      : "hover:bg-slate-50 text-slate-600"
+                  )}
+                >
+                  <span className="truncate">{track.name}</span>
+                  {currentTrack.id === track.id && isPlaying && (
+                    <div className="flex gap-0.5">
+                      <motion.div animate={{ height: [4, 12, 4] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-1 bg-indigo-500 rounded-full" />
+                      <motion.div animate={{ height: [8, 16, 8] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }} className="w-1 bg-indigo-500 rounded-full" />
+                      <motion.div animate={{ height: [4, 10, 4] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }} className="w-1 bg-indigo-500 rounded-full" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
+              <button
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="w-10 h-10 flex items-center justify-center bg-indigo-100 text-indigo-600 rounded-full hover:bg-indigo-200 transition-colors shrink-0"
+              >
+                {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-1" />}
+              </button>
+              <div className="flex-1 flex items-center gap-2">
+                <Volume2 size={16} className="text-slate-400 shrink-0" />
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={volume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="w-full accent-indigo-500"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={clsx(
+          "w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95",
+          isPlaying ? "bg-indigo-600 text-white" : "bg-white text-slate-600 border border-slate-200"
+        )}
+      >
+        <Music size={24} />
+      </button>
+
+      <audio ref={audioRef} src={currentTrack.url} loop />
+    </div>
   );
 }
 
@@ -374,6 +510,11 @@ function App() {
           {currentScreen === 'COLOR_WORD' && <ColorWordGame key="color_word" initialLevel={getSavedLevel('COLOR_WORD')} onSaveLevel={(l) => saveLevel('COLOR_WORD', l)} onFinish={(s) => saveScore('색상 단어', s)} />}
           {currentScreen === 'PATTERN' && <PatternGame key="pattern" initialLevel={getSavedLevel('PATTERN')} onSaveLevel={(l) => saveLevel('PATTERN', l)} onFinish={(s) => saveScore('패턴 기억', s)} />}
           {currentScreen === 'MATH' && <MathGame key="math" initialLevel={getSavedLevel('MATH')} onSaveLevel={(l) => saveLevel('MATH', l)} onFinish={(s) => saveScore('사칙연산', s)} />}
+          {currentScreen === 'ODD_ONE_OUT' && <OddOneOutGame key="odd_one_out" initialLevel={getSavedLevel('ODD_ONE_OUT')} onSaveLevel={(l) => saveLevel('ODD_ONE_OUT', l)} onFinish={(s) => saveScore('다른 하나 찾기', s)} />}
+          {currentScreen === 'RPS' && <RPSBrainGame key="rps" initialLevel={getSavedLevel('RPS')} onSaveLevel={(l) => saveLevel('RPS', l)} onFinish={(s) => saveScore('가위바위보 두뇌', s)} />}
+          {currentScreen === 'INITIAL_QUIZ' && <InitialQuizGame key="initial_quiz" initialLevel={getSavedLevel('INITIAL_QUIZ')} onSaveLevel={(l) => saveLevel('INITIAL_QUIZ', l)} onFinish={(s) => saveScore('초성 퀴즈', s)} />}
+          {currentScreen === 'FLANKER' && <FlankerTaskGame key="flanker" initialLevel={getSavedLevel('FLANKER')} onSaveLevel={(l) => saveLevel('FLANKER', l)} onFinish={(s) => saveScore('방해꾼 화살표', s)} />}
+          {currentScreen === 'WORD_MEMORY' && <WordMemoryGame key="word_memory" initialLevel={getSavedLevel('WORD_MEMORY')} onSaveLevel={(l) => saveLevel('WORD_MEMORY', l)} onFinish={(s) => saveScore('단어 기억', s)} />}
         </AnimatePresence>
       </main>
 
@@ -395,6 +536,8 @@ function App() {
         {showEntryAd && <AdModal key="entry-ad" type="ENTRY" onClose={closeEntryAd} />}
         {showExitAd && <AdModal key="exit-ad" type="EXIT" onClose={closeExitAd} />}
       </AnimatePresence>
+
+      <BgmPlayer />
     </div>
   );
 }
@@ -412,68 +555,130 @@ function HomeScreen({ onNavigate, currentUser }: { onNavigate: (s: Screen) => vo
         실시간 랭킹 보기
       </button>
 
-      <h2 className="text-2xl font-bold text-center mb-4 text-slate-700">원하시는 게임을 선택하세요</h2>
-      
-      <div className="grid gap-3">
-        <button onClick={() => onNavigate('NUMBER')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
-          <div className="bg-blue-100 p-3 rounded-xl text-blue-600 group-hover:scale-110 transition-transform">
-            <Hash size={28} />
-          </div>
-          <div className="text-left">
-            <h3 className="text-lg font-bold text-slate-800">숫자 기억 게임</h3>
-            <p className="text-sm text-slate-500">순서대로 숫자를 기억하고 누르세요</p>
-          </div>
-        </button>
+      <div className="mt-2 mb-4">
+        <h2 className="text-xl font-bold mb-3 text-slate-700 flex items-center gap-2 px-2">
+          <Users size={24} className="text-indigo-500" />
+          화면 보고 같이 할 수 있는 게임
+        </h2>
+        <div className="grid gap-3">
+          <button onClick={() => onNavigate('COLOR_WORD')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-rose-100 p-3 rounded-xl text-rose-600 group-hover:scale-110 transition-transform">
+              <Palette size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800">색상 단어 게임 (스트룹)</h3>
+              <p className="text-sm text-slate-500">글자의 의미가 아닌 '색상'을 맞추세요</p>
+            </div>
+          </button>
 
-        <button onClick={() => onNavigate('PICTURE')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
-          <div className="bg-emerald-100 p-3 rounded-xl text-emerald-600 group-hover:scale-110 transition-transform">
-            <ImageIcon size={28} />
-          </div>
-          <div className="text-left">
-            <h3 className="text-lg font-bold text-slate-800">그림 짝맞추기</h3>
-            <p className="text-sm text-slate-500">같은 그림의 카드를 찾아보세요</p>
-          </div>
-        </button>
+          <button onClick={() => onNavigate('MATH')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-cyan-100 p-3 rounded-xl text-cyan-600 group-hover:scale-110 transition-transform">
+              <Calculator size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800">두뇌 회전 사칙연산</h3>
+              <p className="text-sm text-slate-500">빠르게 계산 문제를 풀어보세요</p>
+            </div>
+          </button>
 
-        <button onClick={() => onNavigate('PUZZLE')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
-          <div className="bg-amber-100 p-3 rounded-xl text-amber-600 group-hover:scale-110 transition-transform">
-            <Grid3X3 size={28} />
-          </div>
-          <div className="text-left">
-            <h3 className="text-lg font-bold text-slate-800">슬라이딩 퍼즐</h3>
-            <p className="text-sm text-slate-500">조각을 움직여 그림을 완성하세요</p>
-          </div>
-        </button>
+          <button onClick={() => onNavigate('ODD_ONE_OUT')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-emerald-100 p-3 rounded-xl text-emerald-600 group-hover:scale-110 transition-transform">
+              <Search size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center">다른 하나 찾기 <span className="ml-2 px-1.5 py-0.5 text-[10px] font-black bg-red-500 text-white rounded-md tracking-wider">NEW</span></h3>
+              <p className="text-sm text-slate-500">여러 그림 중 다른 하나를 찾아보세요</p>
+            </div>
+          </button>
 
-        <button onClick={() => onNavigate('COLOR_WORD')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
-          <div className="bg-rose-100 p-3 rounded-xl text-rose-600 group-hover:scale-110 transition-transform">
-            <Palette size={28} />
-          </div>
-          <div className="text-left">
-            <h3 className="text-lg font-bold text-slate-800">색상 단어 게임 (스트룹)</h3>
-            <p className="text-sm text-slate-500">글자의 의미가 아닌 '색상'을 맞추세요</p>
-          </div>
-        </button>
+          <button onClick={() => onNavigate('RPS')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-indigo-100 p-3 rounded-xl text-indigo-600 group-hover:scale-110 transition-transform">
+              <Hand size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center">가위바위보 두뇌 <span className="ml-2 px-1.5 py-0.5 text-[10px] font-black bg-red-500 text-white rounded-md tracking-wider">NEW</span></h3>
+              <p className="text-sm text-slate-500">지시에 따라 이기거나 지거나 비기세요</p>
+            </div>
+          </button>
 
-        <button onClick={() => onNavigate('PATTERN')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
-          <div className="bg-purple-100 p-3 rounded-xl text-purple-600 group-hover:scale-110 transition-transform">
-            <BrainCircuit size={28} />
-          </div>
-          <div className="text-left">
-            <h3 className="text-lg font-bold text-slate-800">패턴 기억 게임</h3>
-            <p className="text-sm text-slate-500">불이 켜지는 순서를 기억해 따라하세요</p>
-          </div>
-        </button>
+          <button onClick={() => onNavigate('INITIAL_QUIZ')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-pink-100 p-3 rounded-xl text-pink-600 group-hover:scale-110 transition-transform">
+              <Type size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center">초성 퀴즈 <span className="ml-2 px-1.5 py-0.5 text-[10px] font-black bg-red-500 text-white rounded-md tracking-wider">NEW</span></h3>
+              <p className="text-sm text-slate-500">초성과 힌트를 보고 단어를 맞추세요</p>
+            </div>
+          </button>
 
-        <button onClick={() => onNavigate('MATH')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
-          <div className="bg-cyan-100 p-3 rounded-xl text-cyan-600 group-hover:scale-110 transition-transform">
-            <Calculator size={28} />
-          </div>
-          <div className="text-left">
-            <h3 className="text-lg font-bold text-slate-800">두뇌 회전 사칙연산</h3>
-            <p className="text-sm text-slate-500">빠르게 계산 문제를 풀어보세요</p>
-          </div>
-        </button>
+          <button onClick={() => onNavigate('FLANKER')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-teal-100 p-3 rounded-xl text-teal-600 group-hover:scale-110 transition-transform">
+              <ArrowRight size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center">방해꾼 화살표 <span className="ml-2 px-1.5 py-0.5 text-[10px] font-black bg-red-500 text-white rounded-md tracking-wider">NEW</span></h3>
+              <p className="text-sm text-slate-500">가운데 화살표의 방향을 맞추세요</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <h2 className="text-xl font-bold mb-3 text-slate-700 flex items-center gap-2 px-2 mt-4">
+          <User size={24} className="text-emerald-500" />
+          혼자 집중해서 하는 게임
+        </h2>
+        <div className="grid gap-3">
+          <button onClick={() => onNavigate('NUMBER')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-blue-100 p-3 rounded-xl text-blue-600 group-hover:scale-110 transition-transform">
+              <Hash size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800">숫자 기억 게임</h3>
+              <p className="text-sm text-slate-500">순서대로 숫자를 기억하고 누르세요</p>
+            </div>
+          </button>
+
+          <button onClick={() => onNavigate('PICTURE')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-emerald-100 p-3 rounded-xl text-emerald-600 group-hover:scale-110 transition-transform">
+              <ImageIcon size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800">그림 짝맞추기</h3>
+              <p className="text-sm text-slate-500">같은 그림의 카드를 찾아보세요</p>
+            </div>
+          </button>
+
+          <button onClick={() => onNavigate('PUZZLE')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-amber-100 p-3 rounded-xl text-amber-600 group-hover:scale-110 transition-transform">
+              <Grid3X3 size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800">슬라이딩 퍼즐</h3>
+              <p className="text-sm text-slate-500">조각을 움직여 그림을 완성하세요</p>
+            </div>
+          </button>
+
+          <button onClick={() => onNavigate('PATTERN')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-purple-100 p-3 rounded-xl text-purple-600 group-hover:scale-110 transition-transform">
+              <BrainCircuit size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800">패턴 기억 게임</h3>
+              <p className="text-sm text-slate-500">불이 켜지는 순서를 기억해 따라하세요</p>
+            </div>
+          </button>
+
+          <button onClick={() => onNavigate('WORD_MEMORY')} className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100 group">
+            <div className="bg-fuchsia-100 p-3 rounded-xl text-fuchsia-600 group-hover:scale-110 transition-transform">
+              <Brain size={28} />
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center">단어 기억 게임 <span className="ml-2 px-1.5 py-0.5 text-[10px] font-black bg-red-500 text-white rounded-md tracking-wider">NEW</span></h3>
+              <p className="text-sm text-slate-500">제시된 단어들을 기억하고 찾아보세요</p>
+            </div>
+          </button>
+        </div>
       </div>
     </motion.div>
   );
@@ -1228,7 +1433,7 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
   const gridCols = activeColors.length <= 4 ? 'grid-cols-2' : 'grid-cols-3';
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md flex flex-col items-center relative min-h-[400px]">
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md landscape:max-w-4xl flex flex-col items-center relative min-h-[400px] landscape:min-h-[300px]">
       <div className="flex justify-between items-center w-full mb-4 px-4">
         <div className="text-lg font-bold text-rose-600">{level}단계 / 50단계</div>
         {score > 0 && (
@@ -1243,29 +1448,32 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
         <div className="bg-rose-500 h-full transition-all duration-100" style={{ width: `${(timeLeft / 30) * 100}%` }} />
       </div>
 
-      <h2 className="text-lg sm:text-xl font-bold mb-2 text-slate-800 text-center">글자의 <span className="text-rose-500">색상</span>을 맞추세요</h2>
-      <p className="text-sm sm:text-base text-slate-500 mb-2 text-center">30초 동안 최대한 많이 맞추세요!</p>
-      <p className="text-sm font-bold text-rose-500 mb-4">현재 단계 맞춘 횟수: {correctCount}번</p>
-
       {(isLevelClear || isGameOver) && (
         <LevelComplete level={level} score={levelScore} onNext={nextLevel} isGameOver={isGameOver} isLevelClear={isLevelClear} totalScore={score} onFinish={() => onFinish(score)} />
       )}
 
-      <div className="w-full flex flex-col items-center">
-        <div className="h-32 flex items-center justify-center mb-6">
-          <span style={{ color: ink.color }} className="text-6xl sm:text-7xl font-black tracking-widest drop-shadow-sm">
-            {word.name}
-          </span>
+      <div className="w-full flex flex-col landscape:flex-row items-center justify-center gap-4 landscape:gap-8 flex-1">
+        <div className="flex flex-col items-center justify-center landscape:w-1/2">
+          <h2 className="text-lg sm:text-xl font-bold mb-2 text-slate-800 text-center">글자의 <span className="text-rose-500">색상</span>을 맞추세요</h2>
+          <p className="text-sm sm:text-base text-slate-500 mb-2 text-center">30초 동안 최대한 많이 맞추세요!</p>
+          <p className="text-sm font-bold text-rose-500 mb-4">현재 단계 맞춘 횟수: {correctCount}번</p>
+          <div className="h-24 landscape:h-32 flex items-center justify-center mb-6 landscape:mb-0">
+            <span style={{ color: ink.color }} className="text-6xl sm:text-7xl font-black tracking-widest drop-shadow-sm">
+              {word.name}
+            </span>
+          </div>
         </div>
 
-        <div className={`grid ${gridCols} gap-2 sm:gap-3 w-full`}>
-          {activeColors.map((c, i) => (
-            <button key={i} onPointerDown={() => handleColorClick(c.name)} disabled={isLevelClear}
-              className="py-3 rounded-xl text-lg font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
-            >
-              {c.name}
-            </button>
-          ))}
+        <div className="w-full landscape:w-1/2 flex flex-col items-center justify-center">
+          <div className={`grid ${gridCols} gap-2 sm:gap-3 w-full max-w-sm`}>
+            {activeColors.map((c, i) => (
+              <button key={i} onPointerDown={() => handleColorClick(c.name)} disabled={isLevelClear}
+                className="py-3 rounded-xl text-lg font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -1442,7 +1650,7 @@ function MathGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: n
   };
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md flex flex-col items-center relative min-h-[400px]">
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md landscape:max-w-4xl flex flex-col items-center relative min-h-[400px] landscape:min-h-[300px]">
       <div className="flex justify-between items-center w-full mb-4 px-4">
         <div className="text-lg font-bold text-cyan-600">{level}단계 / 50단계</div>
         {score > 0 && (
@@ -1452,29 +1660,704 @@ function MathGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: n
         )}
         <div className="text-lg font-bold text-slate-600">점수: {score}</div>
       </div>
-      <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-slate-800 text-center">두뇌 회전 사칙연산</h2>
 
       {(isLevelClear || isGameOver) && (
         <LevelComplete level={level} score={levelScore} onNext={nextLevel} isGameOver={isGameOver} isLevelClear={isLevelClear} totalScore={score} onFinish={() => onFinish(score)} />
       )}
 
-      <div className="w-full flex flex-col items-center">
-        <div className="h-32 flex items-center justify-center mb-10 w-full bg-white rounded-3xl shadow-sm border border-slate-100">
-          <span className="text-4xl sm:text-6xl font-black text-slate-800 tracking-wider">
-            {equation.num1} {equation.op} {equation.num2} = ?
-          </span>
+      <div className="w-full flex flex-col landscape:flex-row items-center justify-center gap-4 landscape:gap-8 flex-1">
+        <div className="flex flex-col items-center justify-center landscape:w-1/2 w-full">
+          <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-slate-800 text-center">두뇌 회전 사칙연산</h2>
+          <div className="h-32 flex items-center justify-center mb-10 landscape:mb-0 w-full bg-white rounded-3xl shadow-sm border border-slate-100">
+            <span className="text-4xl sm:text-6xl font-black text-slate-800 tracking-wider">
+              {equation.num1} {equation.op} {equation.num2} = ?
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
-          {options.map((opt, i) => (
-            <button key={i} onPointerDown={() => handleAnswer(opt)} disabled={isLevelClear}
-              className="py-4 sm:py-5 rounded-2xl text-2xl sm:text-3xl font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-cyan-50 hover:border-cyan-300 hover:text-cyan-700 active:scale-95 transition-all"
-            >
-              {opt}
-            </button>
-          ))}
+        <div className="w-full landscape:w-1/2 flex items-center justify-center">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full max-w-sm">
+            {options.map((opt, i) => (
+              <button key={i} onPointerDown={() => handleAnswer(opt)} disabled={isLevelClear}
+                className="py-4 sm:py-5 rounded-2xl text-2xl sm:text-3xl font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-cyan-50 hover:border-cyan-300 hover:text-cyan-700 active:scale-95 transition-all"
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+    </motion.div>
+  );
+}
+
+// --- 7. Odd One Out Game (다른 하나 찾기) ---
+function OddOneOutGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: number) => void, initialLevel: number, onSaveLevel: (level: number) => void }) {
+  const [level, setLevel] = useState(initialLevel);
+  const [score, setScore] = useState(0);
+  const [levelScore, setLevelScore] = useState(0);
+  const [isLevelClear, setIsLevelClear] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [items, setItems] = useState<{id: number, emoji: string, isOdd: boolean}[]>([]);
+  const [gridSize, setGridSize] = useState(2);
+  const [timeLeft, setTimeLeft] = useState(10);
+
+  const emojis = ["🍎", "🍌", "🍇", "🍉", "🍓", "🍒", "🥝", "🍍", "🍔", "🍕", "🌭", "🌮", "🐶", "🐱", "🐭", "🐹"];
+
+  const initLevel = (lvl: number) => {
+    setIsLevelClear(false);
+    setTimeLeft(10);
+    const size = Math.min(2 + Math.floor((lvl - 1) / 3), 6); // 2x2 up to 6x6
+    setGridSize(size);
+    
+    const totalItems = size * size;
+    const baseEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    let oddEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    while (oddEmoji === baseEmoji) {
+      oddEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    }
+
+    const oddIndex = Math.floor(Math.random() * totalItems);
+    const newItems = Array.from({ length: totalItems }).map((_, i) => ({
+      id: i,
+      emoji: i === oddIndex ? oddEmoji : baseEmoji,
+      isOdd: i === oddIndex
+    }));
+    setItems(newItems);
+  };
+
+  useEffect(() => { initLevel(initialLevel); }, [initialLevel]);
+
+  useEffect(() => {
+    if (isLevelClear || isGameOver) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsGameOver(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isLevelClear, isGameOver, level]);
+
+  const handleItemClick = (isOdd: boolean) => {
+    if (isLevelClear || isGameOver) return;
+    if (isOdd) {
+      const earned = level * 10 + timeLeft * 2;
+      setLevelScore(earned);
+      setScore(prev => prev + earned);
+      setIsLevelClear(true);
+      if (level === 50) setIsGameOver(true);
+    } else {
+      setTimeLeft(prev => Math.max(0, prev - 3)); // Penalty
+    }
+  };
+
+  const nextLevel = () => {
+    const next = level + 1;
+    setLevel(next);
+    onSaveLevel(next);
+    initLevel(next);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md landscape:max-w-4xl flex flex-col items-center relative min-h-[400px] landscape:min-h-[300px]">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
+        <div className="text-lg font-bold text-emerald-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
+        <div className="text-lg font-bold text-slate-600">점수: {score}</div>
+      </div>
+      
+      <div className="w-full bg-slate-200 h-2 rounded-full mb-4 overflow-hidden">
+        <div className="bg-rose-500 h-full transition-all duration-1000" style={{ width: `${(timeLeft / 10) * 100}%` }} />
+      </div>
+
+      {(isLevelClear || isGameOver) && (
+        <LevelComplete level={level} score={levelScore} onNext={nextLevel} isGameOver={isGameOver} isLevelClear={isLevelClear} totalScore={score} onFinish={() => onFinish(score)} />
+      )}
+
+      <div className="w-full flex flex-col landscape:flex-row items-center justify-center gap-4 landscape:gap-8 flex-1">
+        <div className="flex flex-col items-center justify-center landscape:w-1/3">
+          <h2 className="text-lg sm:text-xl font-bold mb-6 landscape:mb-0 text-slate-800 text-center">다른 하나를 찾으세요!</h2>
+        </div>
+
+        <div className="w-full landscape:w-2/3 flex items-center justify-center">
+          <div 
+            className="grid gap-2 w-full max-w-[300px] mx-auto" 
+            style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
+          >
+            {items.map(item => (
+              <button
+                key={item.id}
+                onClick={() => handleItemClick(item.isOdd)}
+                className="aspect-square bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-center text-3xl sm:text-4xl hover:bg-slate-50 active:scale-95 transition-all"
+              >
+                {item.emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// --- 8. RPS Brain Game (가위바위보 두뇌 게임) ---
+function RPSBrainGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: number) => void, initialLevel: number, onSaveLevel: (level: number) => void }) {
+  const [level, setLevel] = useState(initialLevel);
+  const [score, setScore] = useState(0);
+  const [levelScore, setLevelScore] = useState(0);
+  const [isLevelClear, setIsLevelClear] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
+  
+  const [opponent, setOpponent] = useState<'✌️' | '✊' | '🖐️'>('✊');
+  const [instruction, setInstruction] = useState<'WIN' | 'LOSE' | 'DRAW'>('WIN');
+  const [round, setRound] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(5);
+  
+  const choices: ('✌️' | '✊' | '🖐️')[] = ['✌️', '✊', '🖐️'];
+  const instructions: ('WIN' | 'LOSE' | 'DRAW')[] = ['WIN', 'LOSE', 'DRAW'];
+
+  const initRound = () => {
+    setOpponent(choices[Math.floor(Math.random() * choices.length)]);
+    setInstruction(instructions[Math.floor(Math.random() * instructions.length)]);
+    setTimeLeft(Math.max(2, 5 - Math.floor(level / 10)));
+  };
+
+  const initLevel = (lvl: number) => {
+    setIsLevelClear(false);
+    setLevelScore(0);
+    setRound(1);
+    initRound();
+  };
+
+  useEffect(() => { initLevel(initialLevel); }, [initialLevel]);
+
+  useEffect(() => {
+    if (isLevelClear || isGameOver) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsGameOver(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isLevelClear, isGameOver, round, level]);
+
+  const handleChoice = (choice: '✌️' | '✊' | '🖐️') => {
+    if (isLevelClear || isGameOver) return;
+    
+    let isCorrect = false;
+    if (instruction === 'DRAW' && choice === opponent) isCorrect = true;
+    if (instruction === 'WIN') {
+      if ((choice === '✊' && opponent === '✌️') || (choice === '🖐️' && opponent === '✊') || (choice === '✌️' && opponent === '🖐️')) isCorrect = true;
+    }
+    if (instruction === 'LOSE') {
+      if ((choice === '✌️' && opponent === '✊') || (choice === '✊' && opponent === '🖐️') || (choice === '🖐️' && opponent === '✌️')) isCorrect = true;
+    }
+
+    if (isCorrect) {
+      if (round >= 5) {
+        const earned = level * 15;
+        setLevelScore(earned);
+        setScore(prev => prev + earned);
+        setIsLevelClear(true);
+        if (level === 50) setIsGameOver(true);
+      } else {
+        setRound(r => r + 1);
+        initRound();
+      }
+    } else {
+      setIsGameOver(true);
+    }
+  };
+
+  const nextLevel = () => {
+    const next = level + 1;
+    setLevel(next);
+    onSaveLevel(next);
+    initLevel(next);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md landscape:max-w-4xl flex flex-col items-center relative min-h-[400px] landscape:min-h-[300px]">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
+        <div className="text-lg font-bold text-emerald-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
+        <div className="text-lg font-bold text-slate-600">점수: {score}</div>
+      </div>
+      
+      <div className="w-full bg-slate-200 h-2 rounded-full mb-4 overflow-hidden">
+        <div className="bg-rose-500 h-full transition-all duration-1000" style={{ width: `${(timeLeft / Math.max(2, 5 - Math.floor(level / 10))) * 100}%` }} />
+      </div>
+
+      {(isLevelClear || isGameOver) && (
+        <LevelComplete level={level} score={levelScore} onNext={nextLevel} isGameOver={isGameOver} isLevelClear={isLevelClear} totalScore={score} onFinish={() => onFinish(score)} />
+      )}
+
+      <div className="w-full flex flex-col landscape:flex-row items-center justify-center gap-4 landscape:gap-8 flex-1">
+        <div className="flex flex-col items-center justify-center landscape:w-1/2">
+          <div className="text-center mb-8 landscape:mb-0">
+            <div className="text-6xl mb-4">{opponent}</div>
+            <h2 className={clsx("text-2xl sm:text-3xl font-black", 
+              instruction === 'WIN' ? "text-blue-600" : 
+              instruction === 'LOSE' ? "text-rose-600" : "text-emerald-600"
+            )}>
+              {instruction === 'WIN' ? "이기세요!" : instruction === 'LOSE' ? "지세요!" : "비기세요!"}
+            </h2>
+            <p className="text-slate-500 mt-2 font-bold">{round} / 5 라운드</p>
+          </div>
+        </div>
+
+        <div className="w-full landscape:w-1/2 flex items-center justify-center">
+          <div className="flex gap-4 justify-center w-full">
+            {choices.map(c => (
+              <button key={c} onClick={() => handleChoice(c)} className="w-24 h-24 bg-white rounded-2xl shadow-md border-2 border-slate-100 text-5xl hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all">
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// --- 9. Initial Consonant Quiz (초성 퀴즈) ---
+const INITIAL_WORDS = [
+  { word: "사과", initial: "ㅅㄱ", hint: "빨간 과일" },
+  { word: "학교", initial: "ㅎㄱ", hint: "공부하는 곳" },
+  { word: "바다", initial: "ㅂㄷ", hint: "여름에 가는 곳" },
+  { word: "피자", initial: "ㅍㅈ", hint: "동그란 서양 음식" },
+  { word: "우산", initial: "ㅇㅅ", hint: "비 올 때 쓰는 것" },
+  { word: "안경", initial: "ㅇㄱ", hint: "눈이 나쁠 때 쓰는 것" },
+  { word: "시계", initial: "ㅅㄱ", hint: "시간을 보는 것" },
+  { word: "가방", initial: "ㄱㅂ", hint: "물건을 넣는 것" },
+  { word: "사진", initial: "ㅅㅈ", hint: "추억을 남기는 것" },
+  { word: "가족", initial: "ㄱㅈ", hint: "엄마, 아빠, 나" },
+  { word: "친구", initial: "ㅊㄱ", hint: "나와 친한 사람" },
+  { word: "사랑", initial: "ㅅㄹ", hint: "마음을 표현하는 말" },
+  { word: "행복", initial: "ㅎㅂ", hint: "기분이 좋을 때" },
+  { word: "건강", initial: "ㄱㄱ", hint: "아프지 않은 상태" },
+  { word: "운동", initial: "ㅇㄷ", hint: "몸을 움직이는 것" },
+];
+
+function InitialQuizGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: number) => void, initialLevel: number, onSaveLevel: (level: number) => void }) {
+  const [level, setLevel] = useState(initialLevel);
+  const [score, setScore] = useState(0);
+  const [levelScore, setLevelScore] = useState(0);
+  const [isLevelClear, setIsLevelClear] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
+  
+  const [currentWord, setCurrentWord] = useState(INITIAL_WORDS[0]);
+  const [options, setOptions] = useState<string[]>([]);
+  const [round, setRound] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(15);
+
+  const initRound = () => {
+    const wordObj = INITIAL_WORDS[Math.floor(Math.random() * INITIAL_WORDS.length)];
+    setCurrentWord(wordObj);
+    
+    const wrongOptions = INITIAL_WORDS.filter(w => w.word !== wordObj.word).sort(() => Math.random() - 0.5).slice(0, 3).map(w => w.word);
+    setOptions([wordObj.word, ...wrongOptions].sort(() => Math.random() - 0.5));
+    setTimeLeft(Math.max(5, 15 - Math.floor(level / 5)));
+  };
+
+  const initLevel = (lvl: number) => {
+    setIsLevelClear(false);
+    setLevelScore(0);
+    setRound(1);
+    initRound();
+  };
+
+  useEffect(() => { initLevel(initialLevel); }, [initialLevel]);
+
+  useEffect(() => {
+    if (isLevelClear || isGameOver) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsGameOver(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isLevelClear, isGameOver, round, level]);
+
+  const handleChoice = (choice: string) => {
+    if (isLevelClear || isGameOver) return;
+    
+    if (choice === currentWord.word) {
+      if (round >= 3) {
+        const earned = level * 20;
+        setLevelScore(earned);
+        setScore(prev => prev + earned);
+        setIsLevelClear(true);
+        if (level === 50) setIsGameOver(true);
+      } else {
+        setRound(r => r + 1);
+        initRound();
+      }
+    } else {
+      setTimeLeft(prev => Math.max(0, prev - 3)); // Penalty
+    }
+  };
+
+  const nextLevel = () => {
+    const next = level + 1;
+    setLevel(next);
+    onSaveLevel(next);
+    initLevel(next);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md landscape:max-w-4xl flex flex-col items-center relative min-h-[400px] landscape:min-h-[300px]">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
+        <div className="text-lg font-bold text-emerald-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
+        <div className="text-lg font-bold text-slate-600">점수: {score}</div>
+      </div>
+      
+      <div className="w-full bg-slate-200 h-2 rounded-full mb-4 overflow-hidden">
+        <div className="bg-rose-500 h-full transition-all duration-1000" style={{ width: `${(timeLeft / Math.max(5, 15 - Math.floor(level / 5))) * 100}%` }} />
+      </div>
+
+      {(isLevelClear || isGameOver) && (
+        <LevelComplete level={level} score={levelScore} onNext={nextLevel} isGameOver={isGameOver} isLevelClear={isLevelClear} totalScore={score} onFinish={() => onFinish(score)} />
+      )}
+
+      <div className="w-full flex flex-col landscape:flex-row items-center justify-center gap-4 landscape:gap-8 flex-1">
+        <div className="flex flex-col items-center justify-center landscape:w-1/2">
+          <div className="text-center mb-8 landscape:mb-0 w-full">
+            <div className="text-5xl font-black text-slate-800 mb-2 tracking-widest">{currentWord.initial}</div>
+            <div className="text-lg text-slate-500 font-medium bg-slate-100 py-2 px-4 rounded-full inline-block">힌트: {currentWord.hint}</div>
+            <p className="text-slate-400 mt-4 font-bold">{round} / 3 문제</p>
+          </div>
+        </div>
+
+        <div className="w-full landscape:w-1/2 flex items-center justify-center">
+          <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+            {options.map(opt => (
+              <button key={opt} onClick={() => handleChoice(opt)} className="py-4 bg-white rounded-2xl shadow-sm border-2 border-slate-100 text-2xl font-bold text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 active:scale-95 transition-all">
+                {opt}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// --- 10. Flanker Task Game (방해꾼 화살표) ---
+function FlankerTaskGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: number) => void, initialLevel: number, onSaveLevel: (level: number) => void }) {
+  const [level, setLevel] = useState(initialLevel);
+  const [score, setScore] = useState(0);
+  const [levelScore, setLevelScore] = useState(0);
+  const [isLevelClear, setIsLevelClear] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
+  
+  const [arrows, setArrows] = useState<string[]>([]);
+  const [centerDirection, setCenterDirection] = useState<'LEFT' | 'RIGHT'>('LEFT');
+  const [round, setRound] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(5);
+
+  const initRound = () => {
+    const isCenterLeft = Math.random() > 0.5;
+    setCenterDirection(isCenterLeft ? 'LEFT' : 'RIGHT');
+    
+    // Congruent (all same) or Incongruent (center different)
+    const isIncongruent = Math.random() > 0.3; // 70% chance of being tricky
+    
+    const centerArrow = isCenterLeft ? '◀' : '▶';
+    const flankerArrow = isIncongruent ? (isCenterLeft ? '▶' : '◀') : centerArrow;
+    
+    setArrows([flankerArrow, flankerArrow, centerArrow, flankerArrow, flankerArrow]);
+    setTimeLeft(Math.max(2, 5 - Math.floor(level / 10)));
+  };
+
+  const initLevel = (lvl: number) => {
+    setIsLevelClear(false);
+    setLevelScore(0);
+    setRound(1);
+    initRound();
+  };
+
+  useEffect(() => { initLevel(initialLevel); }, [initialLevel]);
+
+  useEffect(() => {
+    if (isLevelClear || isGameOver) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsGameOver(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isLevelClear, isGameOver, round, level]);
+
+  const handleChoice = (dir: 'LEFT' | 'RIGHT') => {
+    if (isLevelClear || isGameOver) return;
+    
+    if (dir === centerDirection) {
+      if (round >= 5) {
+        const earned = level * 15;
+        setLevelScore(earned);
+        setScore(prev => prev + earned);
+        setIsLevelClear(true);
+        if (level === 50) setIsGameOver(true);
+      } else {
+        setRound(r => r + 1);
+        initRound();
+      }
+    } else {
+      setIsGameOver(true);
+    }
+  };
+
+  const nextLevel = () => {
+    const next = level + 1;
+    setLevel(next);
+    onSaveLevel(next);
+    initLevel(next);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md landscape:max-w-4xl flex flex-col items-center relative min-h-[400px] landscape:min-h-[300px]">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
+        <div className="text-lg font-bold text-emerald-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
+        <div className="text-lg font-bold text-slate-600">점수: {score}</div>
+      </div>
+      
+      <div className="w-full bg-slate-200 h-2 rounded-full mb-4 overflow-hidden">
+        <div className="bg-rose-500 h-full transition-all duration-1000" style={{ width: `${(timeLeft / Math.max(2, 5 - Math.floor(level / 10))) * 100}%` }} />
+      </div>
+
+      {(isLevelClear || isGameOver) && (
+        <LevelComplete level={level} score={levelScore} onNext={nextLevel} isGameOver={isGameOver} isLevelClear={isLevelClear} totalScore={score} onFinish={() => onFinish(score)} />
+      )}
+
+      <div className="w-full flex flex-col landscape:flex-row items-center justify-center gap-4 landscape:gap-8 flex-1">
+        <div className="flex flex-col items-center justify-center landscape:w-1/2">
+          <h2 className="text-lg sm:text-xl font-bold mb-2 text-slate-800 text-center">가운데 화살표 방향을 누르세요!</h2>
+          <p className="text-slate-500 mb-4 landscape:mb-8 font-bold text-center">{round} / 5 라운드</p>
+
+          <div className="flex justify-center items-center gap-2 mb-8 landscape:mb-0 bg-white py-6 px-8 rounded-3xl shadow-sm border border-slate-100">
+            {arrows.map((arr, i) => (
+              <span key={i} className={clsx("text-4xl sm:text-5xl font-black", i === 2 ? "text-rose-500 scale-125" : "text-slate-300")}>
+                {arr}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="w-full landscape:w-1/2 flex items-center justify-center">
+          <div className="flex gap-4 justify-center w-full max-w-sm">
+            <button onClick={() => handleChoice('LEFT')} className="flex-1 py-6 bg-white rounded-2xl shadow-md border-2 border-slate-100 text-4xl hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all">
+              ◀
+            </button>
+            <button onClick={() => handleChoice('RIGHT')} className="flex-1 py-6 bg-white rounded-2xl shadow-md border-2 border-slate-100 text-4xl hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all">
+              ▶
+            </button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+const WORD_LIST = [
+  '사과', '바나나', '포도', '수박', '딸기', '오렌지', '복숭아', '자두', '배', '감',
+  '강아지', '고양이', '토끼', '호랑이', '사자', '코끼리', '원숭이', '기린', '하마', '곰',
+  '책상', '의자', '침대', '옷장', '소파', '식탁', '거울', '시계', '액자', '냉장고',
+  '연필', '지우개', '볼펜', '공책', '가위', '가방', '신발', '모자', '안경', '반지',
+  '바지', '치마', '티셔츠', '스웨터', '코트', '양말', '운동화', '구두', '장갑', '목도리',
+  '비행기', '기차', '자동차', '버스', '택시', '자전거', '오토바이', '배', '트럭', '헬리콥터'
+];
+
+function WordMemoryGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: number) => void, initialLevel: number, onSaveLevel: (level: number) => void }) {
+  const [level, setLevel] = useState(initialLevel);
+  const [score, setScore] = useState(0);
+  const [phase, setPhase] = useState<'MEMORIZE' | 'RECALL'>('MEMORIZE');
+  const [targetWords, setTargetWords] = useState<string[]>([]);
+  const [options, setOptions] = useState<string[]>([]);
+  const [selectedWords, setSelectedWords] = useState<string[]>([]);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [gameTimer, setGameTimer] = useState(60);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [levelScore, setLevelScore] = useState(0);
+  const [isLevelClear, setIsLevelClear] = useState(false);
+
+  useEffect(() => {
+    if (isGameOver || isLevelClear) return;
+    const timer = setInterval(() => {
+      setGameTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsGameOver(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isGameOver, isLevelClear]);
+
+  useEffect(() => {
+    if (isGameOver || isLevelClear) return;
+    
+    const wordCount = Math.min(3 + Math.floor((level - 1) / 2), 8);
+    const optionCount = Math.min(wordCount * 2, 16);
+    
+    const shuffled = [...WORD_LIST].sort(() => Math.random() - 0.5);
+    const targets = shuffled.slice(0, wordCount);
+    const distractors = shuffled.slice(wordCount, optionCount);
+    
+    setTargetWords(targets);
+    setOptions([...targets, ...distractors].sort(() => Math.random() - 0.5));
+    setSelectedWords([]);
+    setPhase('MEMORIZE');
+    setTimeLeft(wordCount + 1); // 1 second per word + 1
+    
+  }, [level, isGameOver, isLevelClear]);
+
+  useEffect(() => {
+    if (phase === 'MEMORIZE' && timeLeft > 0 && !isGameOver && !isLevelClear) {
+      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (phase === 'MEMORIZE' && timeLeft === 0 && !isGameOver && !isLevelClear) {
+      setPhase('RECALL');
+    }
+  }, [phase, timeLeft, isGameOver, isLevelClear]);
+
+  const handleWordClick = (word: string) => {
+    if (phase !== 'RECALL' || isGameOver || isLevelClear) return;
+    
+    if (selectedWords.includes(word)) {
+      setSelectedWords(prev => prev.filter(w => w !== word));
+    } else {
+      const newSelected = [...selectedWords, word];
+      setSelectedWords(newSelected);
+      
+      if (newSelected.length === targetWords.length) {
+        // Check if correct
+        const isCorrect = newSelected.every(w => targetWords.includes(w));
+        if (isCorrect) {
+          const earned = level * 10;
+          setLevelScore(earned);
+          setScore(prev => prev + earned);
+          setIsLevelClear(true);
+          if (level === 50) setIsGameOver(true);
+        } else {
+          setGameTimer(prev => Math.max(0, prev - 5)); // Penalty
+          setSelectedWords([]);
+        }
+      }
+    }
+  };
+
+  const nextLevel = () => {
+    const next = level + 1;
+    setLevel(next);
+    onSaveLevel(next);
+    setIsLevelClear(false);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-2xl flex flex-col items-center relative min-h-[400px]">
+      <div className="flex justify-between items-center w-full mb-4 px-4">
+        <div className="text-lg font-bold text-emerald-600">{level}단계 / 50단계</div>
+        {score > 0 && (
+          <button onClick={() => onFinish(score)} className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
+            저장하고 끝내기
+          </button>
+        )}
+        <div className="text-lg font-bold text-slate-600">점수: {score}</div>
+      </div>
+      
+      <div className="w-full bg-slate-200 h-2 rounded-full mb-4 overflow-hidden">
+        <div className="bg-rose-500 h-full transition-all duration-1000" style={{ width: `${(gameTimer / 60) * 100}%` }} />
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center w-full">
+        {phase === 'MEMORIZE' ? (
+          <div className="text-center w-full">
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-8">다음 단어들을 기억하세요! ({timeLeft}초)</h3>
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 w-full">
+              {targetWords.map((word, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white px-4 py-3 sm:px-6 sm:py-4 rounded-2xl shadow-md text-xl sm:text-2xl font-bold text-blue-600 border-2 border-blue-100"
+                >
+                  {word}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center w-full">
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2">기억한 단어 {targetWords.length}개를 모두 선택하세요</h3>
+            <p className="text-slate-500 mb-8 font-bold">({selectedWords.length} / {targetWords.length} 선택됨)</p>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 w-full">
+              {options.map((word, i) => {
+                const isSelected = selectedWords.includes(word);
+                return (
+                  <motion.button
+                    key={i}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleWordClick(word)}
+                    className={`p-3 sm:p-4 rounded-2xl font-bold text-lg sm:text-xl transition-all shadow-sm border-2 ${
+                      isSelected 
+                        ? 'bg-blue-500 text-white border-blue-600' 
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'
+                    }`}
+                  >
+                    {word}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {(isLevelClear || isGameOver) && (
+        <LevelComplete level={level} score={levelScore} onNext={nextLevel} isGameOver={isGameOver} isLevelClear={isLevelClear} totalScore={score} onFinish={() => onFinish(score)} />
+      )}
     </motion.div>
   );
 }
