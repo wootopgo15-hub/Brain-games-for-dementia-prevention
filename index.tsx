@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
-import { Brain, Hash, Image as ImageIcon, Grid3X3, ArrowLeft, Palette, BrainCircuit, Calculator, Trophy, User, Building, LogOut, Heart } from 'lucide-react';
+import { Brain, Hash, Image as ImageIcon, Grid3X3, ArrowLeft, Palette, BrainCircuit, Calculator, Trophy, User, Building, LogOut, Heart, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import './index.css';
@@ -71,9 +71,14 @@ function AdModal({ type, onClose }: { type: 'ENTRY' | 'EXIT', onClose: () => voi
         <div className="px-4 py-3 bg-[#F4F6FF] flex justify-between items-center border-b border-blue-100/50">
           <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider bg-blue-100/50 px-1">Advertisement</span>
           <button 
-            onClick={onClose} 
+            onPointerDown={(e) => {
+              if (timeLeft === 0) {
+                e.preventDefault();
+                onClose();
+              }
+            }}
             disabled={timeLeft > 0}
-            className={`text-[11px] font-bold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 ${timeLeft > 0 ? 'bg-[#0B215E] text-white cursor-not-allowed' : 'bg-[#0B215E] text-white hover:bg-blue-900'}`}
+            className={`text-sm font-bold px-5 py-2.5 rounded-full transition-all flex items-center gap-1 shadow-sm active:scale-95 ${timeLeft > 0 ? 'bg-slate-400 text-white cursor-not-allowed' : 'bg-[#0B215E] text-white hover:bg-blue-900'}`}
           >
             {timeLeft > 0 ? `닫기 0${timeLeft}` : '닫기 (X)'}
           </button>
@@ -102,7 +107,24 @@ function AdModal({ type, onClose }: { type: 'ENTRY' | 'EXIT', onClose: () => voi
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('LOGIN');
+  const [history, setHistory] = useState<Screen[]>([]);
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+
+  const navigateTo = (screen: Screen) => {
+    setHistory(prev => [...prev, currentScreen]);
+    setCurrentScreen(screen);
+  };
+
+  const goBack = () => {
+    if (history.length > 0) {
+      const newHistory = [...history];
+      const prevScreen = newHistory.pop()!;
+      setHistory(newHistory);
+      setCurrentScreen(prevScreen);
+    } else {
+      setCurrentScreen('HOME');
+    }
+  };
   const [scores, setScores] = useState<ScoreEntry[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showEntryAd, setShowEntryAd] = useState(false);
@@ -181,42 +203,46 @@ function App() {
   }, []);
 
   const handleLogin = (user: UserData) => {
+    setHistory([]);
     if (user.type === 'INDIVIDUAL') {
       setPendingUser(user);
       setShowEntryAd(true);
     } else {
       setCurrentUser(user);
-      setCurrentScreen('HOME');
+      navigateTo('HOME');
     }
   };
 
   const handleLogout = () => {
+    setHistory([]);
     if (currentUser?.type === 'INDIVIDUAL') {
       setShowExitAd(true);
     } else {
       setCurrentUser(null);
-      setCurrentScreen('LOGIN');
+      navigateTo('LOGIN');
     }
   };
 
   const closeEntryAd = () => {
+    setHistory([]);
     setShowEntryAd(false);
     if (pendingUser) {
       setCurrentUser(pendingUser);
-      setCurrentScreen('HOME');
+      navigateTo('HOME');
       setPendingUser(null);
     }
   };
 
   const closeExitAd = () => {
+    setHistory([]);
     setShowExitAd(false);
     setCurrentUser(null);
-    setCurrentScreen('LOGIN');
+    navigateTo('LOGIN');
   };
 
   const saveScore = async (game: string, score: number) => {
     if (!currentUser) {
-      setCurrentScreen('LOGIN');
+      navigateTo('LOGIN');
       return;
     }
 
@@ -273,7 +299,7 @@ function App() {
     }
 
     // Switch to ranking screen after saving (or if score is 0)
-    setCurrentScreen('RANKING');
+    navigateTo('RANKING');
   };
 
   const getUserKey = (user: UserData) => `${user.type}-${user.name}-${user.type === 'INDIVIDUAL' ? user.center : ''}`;
@@ -302,14 +328,22 @@ function App() {
         <div className="flex items-center gap-2">
           {currentScreen !== 'LOGIN' && currentScreen !== 'HOME' && (
             <button 
-              onClick={() => setCurrentScreen('HOME')}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              onClick={goBack}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors flex items-center gap-1"
             >
               <ArrowLeft size={24} />
+              <span className="text-sm font-bold text-slate-600 hidden sm:inline">뒤로 가기</span>
             </button>
           )}
           <Brain className="text-indigo-600" size={28} />
           <h1 className="text-xl font-bold text-slate-800">치매 예방 두뇌 게임</h1>
+          <button 
+            onClick={() => window.location.href = 'https://janggo2026-portal-1068844929643.us-west1.run.app'}
+            className="p-2 ml-1 hover:bg-slate-100 rounded-full transition-colors text-slate-600 flex items-center justify-center"
+            title="포털로 돌아가기"
+          >
+            <Home size={24} />
+          </button>
         </div>
         
         {currentUser && (
@@ -330,7 +364,7 @@ function App() {
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
         <AnimatePresence mode="wait">
           {currentScreen === 'LOGIN' && <LoginScreen key="login" onLogin={handleLogin} />}
-          {currentScreen === 'HOME' && <HomeScreen key="home" onNavigate={setCurrentScreen} currentUser={currentUser!} />}
+          {currentScreen === 'HOME' && <HomeScreen key="home" onNavigate={navigateTo} currentUser={currentUser!} />}
           {currentScreen === 'RANKING' && <RankingScreen key="ranking" scores={scores} onRefresh={fetchScoresFromSheet} />}
           
           {currentScreen === 'NUMBER' && <NumberGame key="number" initialLevel={getSavedLevel('NUMBER')} onSaveLevel={(l) => saveLevel('NUMBER', l)} onFinish={(s) => saveScore('숫자 기억', s)} />}
