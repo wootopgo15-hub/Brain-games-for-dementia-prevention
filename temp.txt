@@ -1,0 +1,6 @@
+ <div className="flex border-b border-slate-100">
+ <button 
+ onClick={() => setTab('CENTER')}
+ className={clsx("flex-1 py-4 landscape:py-3 text-center font-bold transition-colors", tab === 'CENTER' ? "bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600" : "text-slate-500 hover:bg-slate-50")}
+ >
+ 센터 로그인
