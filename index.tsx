@@ -1101,21 +1101,21 @@ function LandscapeGameWrapper({ title, description, children, onBack }: { title:
  if (!isStarted) {
  return (
  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full h-full flex flex-col items-center justify-center p-4">
- <div className="bg-white p-6 sm:p-8 landscape:p-4 rounded-3xl shadow-xl max-w-sm landscape:max-w-2xl w-full border border-slate-100 text-center landscape:text-left relative overflow-hidden flex flex-col landscape:flex-row items-center gap-2 landscape:gap-4">
- <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500 landscape:w-2 landscape:h-full" />
+ <div className="bg-white p-6 sm:p-8 landscape:p-8 rounded-3xl shadow-xl max-w-sm landscape:max-w-3xl w-full border border-slate-100 text-center landscape:text-left relative overflow-hidden flex flex-col landscape:flex-row items-center gap-2 landscape:gap-8">
+ <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-500 landscape:w-3 landscape:h-full" />
  
  <div className="flex flex-col items-center justify-center">
- <div className="bg-indigo-50 w-20 h-20 sm:w-24 sm:h-24 landscape:w-16 landscape:h-16 rounded-full flex items-center justify-center mb-4 landscape:mb-0 text-indigo-600 shadow-inner shrink-0">
- <Smartphone className="w-10 h-10 sm:w-12 sm:h-12 landscape:w-8 landscape:h-8 rotate-90" />
+ <div className="bg-indigo-50 w-20 h-20 sm:w-24 sm:h-24 landscape:w-24 landscape:h-24 rounded-full flex items-center justify-center mb-4 landscape:mb-0 text-indigo-600 shadow-inner shrink-0">
+ <Smartphone className="w-10 h-10 sm:w-12 sm:h-12 landscape:w-12 landscape:h-12 rotate-90" />
  </div>
  </div>
 
  <div className="flex-1 flex flex-col w-full">
- <h2 className="text-xl sm:text-2xl font-black text-slate-800 mb-1 sm:mb-2 landscape:mb-1">{title}</h2>
- <p className="text-sm sm:text-base text-slate-500 font-medium mb-4 landscape:mb-2">두뇌 훈련 게임</p>
+ <h2 className="text-xl sm:text-2xl landscape:text-4xl font-black text-slate-800 mb-1 sm:mb-2 landscape:mb-2">{title}</h2>
+ <p className="text-sm sm:text-base landscape:text-xl text-slate-500 font-medium mb-4 landscape:mb-4">두뇌 훈련 게임</p>
  
- <div className="bg-slate-50 rounded-2xl p-3 sm:p-4 landscape:p-2 mb-6 landscape:mb-3 border border-slate-100">
- <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-bold">
+ <div className="bg-slate-50 rounded-2xl p-3 sm:p-4 landscape:p-6 mb-6 landscape:mb-6 border border-slate-100">
+ <p className="text-sm sm:text-base landscape:text-2xl text-slate-700 leading-relaxed font-bold">
  {description}
  </p>
  <p className="text-indigo-600 font-black text-base sm:text-lg mt-2 bg-indigo-100/50 py-1.5 sm:py-2 px-4 rounded-xl inline-block landscape:hidden">
@@ -1124,10 +1124,10 @@ function LandscapeGameWrapper({ title, description, children, onBack }: { title:
  </div>
 
  <div className="flex gap-3 justify-center landscape:justify-start">
- <button onClick={onBack} className="flex-1 landscape:flex-none landscape:px-6 py-3 sm:py-3.5 landscape:py-2 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm sm:text-base">
+ <button onClick={onBack} className="flex-1 landscape:flex-none landscape:px-8 py-3 sm:py-3.5 landscape:py-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors text-sm sm:text-base landscape:text-xl">
  돌아가기
  </button>
- <button onClick={() => setIsStarted(true)} className="flex-1 landscape:flex-none landscape:px-6 py-3 sm:py-3.5 landscape:py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg active:scale-95 text-sm sm:text-base">
+ <button onClick={() => setIsStarted(true)} className="flex-1 landscape:flex-none landscape:px-12 py-3 sm:py-3.5 landscape:py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg active:scale-95 text-sm sm:text-base landscape:text-xl">
  시작하기
  </button>
  </div>
@@ -1495,7 +1495,6 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
  setIsLevelClear(false);
  setLevelScore(0);
  setCorrectCount(0);
- setElapsedTime(0);
  nextWord(lvl);
  };
 
@@ -1543,10 +1542,7 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
  return (
  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md landscape:max-w-3xl flex flex-col items-center relative min-h-[400px] landscape:min-h-0 landscape:h-full landscape:justify-center">
  <div className="flex justify-between items-center w-full mb-2 sm:mb-4 px-4">
- <div className="flex items-center gap-3 sm:gap-4">
  <div className="text-base sm:text-lg font-bold text-rose-600">{level}단계 / 50단계</div>
- <div className="text-base sm:text-lg font-bold text-slate-500">{elapsedTime}초</div>
- </div>
  <div className="flex items-center gap-3 sm:gap-4">
  {score > 0 && (
  <button onClick={() => onFinish(score)} className="px-2 py-1 sm:px-3 sm:py-1.5 bg-slate-200 text-slate-700 rounded-full text-xs sm:text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
@@ -1565,19 +1561,22 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
  <div className="flex flex-col items-center justify-center landscape:w-1/2">
  <h2 className="text-lg sm:text-xl font-bold mb-2 text-slate-800 text-center landscape:hidden">글자의 <span className="text-rose-500">색상</span>을 맞추세요</h2>
  <p className="text-sm sm:text-base text-slate-500 mb-2 text-center landscape:hidden">5번 맞추면 다음 단계로 넘어갑니다!</p>
- <p className="text-sm font-bold text-rose-500 mb-4 landscape:hidden">현재 단계 맞춘 횟수: {correctCount} / 5</p>
- <div className="h-24 flex items-center justify-center mb-6 landscape:mb-0">
- <span style={{ color: ink.color }} className="text-6xl sm:text-7xl font-black tracking-widest drop-shadow-sm">
+ <div className="flex items-center justify-center gap-4 mb-4 landscape:hidden">
+ <p className="text-sm font-bold text-rose-500">현재 단계 맞춘 횟수: {correctCount} / 5</p>
+ <p className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full shadow-inner">진행 시간: {elapsedTime}초</p>
+ </div>
+ <div className="h-24 landscape:h-40 flex items-center justify-center mb-6 landscape:mb-0">
+ <span style={{ color: ink.color }} className="text-6xl sm:text-7xl landscape:text-8xl font-black tracking-widest drop-shadow-sm">
  {word.name}
  </span>
  </div>
  </div>
 
  <div className="w-full landscape:w-1/2 flex flex-col items-center justify-center">
- <div className={`grid ${gridCols} gap-2 sm:gap-3 w-full max-w-sm`}>
+ <div className={`grid ${gridCols} gap-2 sm:gap-3 w-full max-w-sm landscape:max-w-lg`}>
  {activeColors.map((c, i) => (
  <button key={i} onPointerDown={() => handleColorClick(c.name)} disabled={isLevelClear}
- className="py-3 rounded-xl text-lg font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
+ className="py-3 landscape:py-6 rounded-xl text-lg landscape:text-3xl font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
  >
  {c.name}
  </button>
@@ -1778,17 +1777,17 @@ function MathGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (score: n
  <div className="flex flex-col items-center justify-center landscape:w-3/5 w-full">
  <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 text-slate-800 text-center landscape:hidden">두뇌 회전 사칙연산</h2>
  <div className="py-10 sm:py-14 landscape:py-6 px-4 flex items-center justify-center mb-6 sm:mb-8 landscape:mb-0 w-full bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
- <span className="text-4xl sm:text-6xl md:text-7xl landscape:text-5xl font-black text-indigo-600 tracking-wider drop-shadow-md whitespace-nowrap">
+ <span className="text-4xl sm:text-6xl md:text-7xl landscape:text-7xl font-black text-indigo-600 tracking-wider drop-shadow-md whitespace-nowrap">
  {equation.num1} {equation.op} {equation.num2} = ?
  </span>
  </div>
  </div>
 
  <div className="w-full landscape:w-2/5 flex items-center justify-center">
- <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full max-w-[240px] mx-auto">
+ <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full max-w-[240px] landscape:max-w-[400px] mx-auto">
  {options.map((opt, i) => (
  <button key={i} onPointerDown={() => handleAnswer(opt)} disabled={isLevelClear}
- className="py-1.5 sm:py-2 rounded-lg text-base sm:text-lg font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-cyan-50 hover:border-cyan-300 hover:text-cyan-700 active:scale-95 transition-all"
+ className="py-1.5 sm:py-2 landscape:py-6 rounded-lg text-base sm:text-lg landscape:text-4xl font-bold text-slate-700 bg-white border-2 border-slate-200 shadow-sm hover:bg-cyan-50 hover:border-cyan-300 hover:text-cyan-700 active:scale-95 transition-all"
  >
  {opt}
  </button>
@@ -1890,7 +1889,7 @@ function OddOneOutGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
  className="grid gap-1.5 sm:gap-2 w-full mx-auto justify-center" 
  style={{ 
  gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
- maxWidth: `${gridCols * 4.5}rem`
+ maxWidth: `min(100%, ${gridCols * 6}rem)`
  }}
  >
  {items.map(item => (
@@ -1899,7 +1898,7 @@ function OddOneOutGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
  onClick={() => handleItemClick(item.isOdd)}
  className={clsx(
  "aspect-square bg-white shadow-sm border border-slate-200 flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all",
- gridCols > 6 ? "text-xl sm:text-2xl rounded-lg" : "text-2xl sm:text-3xl rounded-xl"
+ gridCols > 6 ? "text-xl sm:text-2xl landscape:text-4xl rounded-lg" : "text-2xl sm:text-3xl landscape:text-5xl rounded-xl"
  )}
  >
  {item.emoji}
@@ -1995,8 +1994,8 @@ function RPSBrainGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (scor
  <div className="w-full flex flex-col landscape:flex-row items-center justify-center gap-4 flex-1">
  <div className="flex flex-col items-center justify-center landscape:w-1/2">
  <div className="text-center mb-8 landscape:mb-0">
- <div className="text-6xl mb-4">{opponent}</div>
- <h2 className={clsx("text-2xl sm:text-3xl font-black", 
+ <div className="text-6xl landscape:text-9xl mb-4">{opponent}</div>
+ <h2 className={clsx("text-2xl sm:text-3xl landscape:text-5xl font-black", 
  instruction === 'WIN' ? "text-blue-600" : 
  instruction === 'LOSE' ? "text-rose-600" : "text-emerald-600"
  )}>
@@ -2009,7 +2008,7 @@ function RPSBrainGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (scor
  <div className="w-full landscape:w-1/2 flex items-center justify-center">
  <div className="flex gap-4 justify-center w-full">
  {choices.map(c => (
- <button key={c} onClick={() => handleChoice(c)} className="w-24 h-24 bg-white rounded-2xl shadow-md border-2 border-slate-100 text-5xl hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all">
+ <button key={c} onClick={() => handleChoice(c)} className="w-24 h-24 landscape:w-32 landscape:h-32 bg-white rounded-2xl shadow-md border-2 border-slate-100 text-5xl landscape:text-7xl hover:bg-slate-50 hover:scale-105 active:scale-95 transition-all">
  {c}
  </button>
  ))}
@@ -2223,16 +2222,16 @@ function InitialQuizGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (s
  <div className="w-full flex flex-col landscape:flex-row items-center justify-center gap-4 flex-1">
  <div className="flex flex-col items-center justify-center landscape:w-1/2">
  <div className="text-center mb-8 landscape:mb-0 w-full">
- <div className="text-5xl font-black text-slate-800 mb-2 tracking-widest">{currentWord.initial}</div>
- <div className="text-lg text-slate-500 font-medium bg-slate-100 py-2 px-4 rounded-full inline-block">힌트: {currentWord.hint}</div>
+ <div className="text-5xl landscape:text-8xl font-black text-slate-800 mb-2 landscape:mb-6 tracking-widest">{currentWord.initial}</div>
+ <div className="text-lg landscape:text-2xl text-slate-500 font-medium bg-slate-100 py-2 landscape:py-4 px-4 landscape:px-8 rounded-full inline-block">힌트: {currentWord.hint}</div>
  <p className="text-slate-400 mt-4 font-bold landscape:hidden">{round} / 3 문제</p>
  </div>
  </div>
 
  <div className="w-full landscape:w-1/2 flex items-center justify-center">
- <div className={clsx("grid gap-2 w-full max-w-sm", options.length >= 8 ? "grid-cols-3" : "grid-cols-2")}>
+ <div className={clsx("grid gap-2 w-full max-w-sm landscape:max-w-lg", options.length >= 8 ? "grid-cols-3" : "grid-cols-2")}>
  {options.map(opt => (
- <button key={opt} onClick={() => handleChoice(opt)} className={clsx("bg-white rounded-2xl shadow-sm border-2 border-slate-100 font-bold text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 active:scale-95 transition-all", options.length >= 8 ? "py-2 text-lg " : "py-4 text-2xl ")}>
+ <button key={opt} onClick={() => handleChoice(opt)} className={clsx("bg-white rounded-2xl shadow-sm border-2 border-slate-100 font-bold text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 active:scale-95 transition-all", options.length >= 8 ? "py-2 landscape:py-4 text-lg landscape:text-2xl" : "py-4 landscape:py-6 text-2xl landscape:text-4xl")}>
  {opt}
  </button>
  ))}
@@ -2324,9 +2323,9 @@ function FlankerTaskGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (s
  <h2 className="text-lg sm:text-xl font-bold mb-2 text-slate-800 text-center landscape:hidden">가운데 화살표 방향을 누르세요!</h2>
  <p className="text-slate-500 mb-4 font-bold text-center landscape:hidden">{round} / 5 라운드</p>
 
- <div className="flex justify-center items-center gap-2 mb-8 landscape:mb-0 bg-white py-6 px-8 rounded-3xl shadow-sm border border-slate-100">
+ <div className="flex justify-center items-center gap-2 mb-8 landscape:mb-0 bg-white py-6 landscape:py-10 px-8 landscape:px-12 rounded-3xl shadow-sm border border-slate-100">
  {arrows.map((arr, i) => (
- <span key={i} className={clsx("text-4xl sm:text-5xl font-black", i === 2 ? "text-rose-500 scale-125" : "text-slate-300")}>
+ <span key={i} className={clsx("text-4xl sm:text-5xl landscape:text-7xl font-black", i === 2 ? "text-rose-500 scale-125" : "text-slate-300")}>
  {arr}
  </span>
  ))}
@@ -2334,11 +2333,11 @@ function FlankerTaskGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (s
  </div>
 
  <div className="w-full landscape:w-1/2 flex items-center justify-center">
- <div className="flex gap-4 justify-center w-full max-w-sm">
- <button onClick={() => handleChoice('LEFT')} className="flex-1 py-6 bg-white rounded-2xl shadow-md border-2 border-slate-100 text-4xl hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all">
+ <div className="flex gap-4 justify-center w-full max-w-sm landscape:max-w-md">
+ <button onClick={() => handleChoice('LEFT')} className="flex-1 py-6 landscape:py-12 bg-white rounded-2xl shadow-md border-2 border-slate-100 text-4xl landscape:text-6xl hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all">
  ◀
  </button>
- <button onClick={() => handleChoice('RIGHT')} className="flex-1 py-6 bg-white rounded-2xl shadow-md border-2 border-slate-100 text-4xl hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all">
+ <button onClick={() => handleChoice('RIGHT')} className="flex-1 py-6 landscape:py-12 bg-white rounded-2xl shadow-md border-2 border-slate-100 text-4xl landscape:text-6xl hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all">
  ▶
  </button>
  </div>
