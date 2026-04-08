@@ -1476,6 +1476,7 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
  const [isLevelClear, setIsLevelClear] = useState(false);
  const [isGameOver, setIsGameOver] = useState(false);
  const [correctCount, setCorrectCount] = useState(0);
+ const [elapsedTime, setElapsedTime] = useState(0);
 
  const getColorCount = (lvl: number) => {
  return Math.min(9, 4 + Math.floor(lvl / 10));
@@ -1494,10 +1495,19 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
  setIsLevelClear(false);
  setLevelScore(0);
  setCorrectCount(0);
+ setElapsedTime(0);
  nextWord(lvl);
  };
 
  useEffect(() => { initLevel(initialLevel); }, [initialLevel]);
+
+ useEffect(() => {
+ if (isLevelClear || isGameOver) return;
+ const timer = setInterval(() => {
+ setElapsedTime(prev => prev + 1);
+ }, 1000);
+ return () => clearInterval(timer);
+ }, [isLevelClear, isGameOver]);
 
  const handleColorClick = (selectedColor: string) => {
  if (isLevelClear || isGameOver) return;
@@ -1533,13 +1543,18 @@ function ColorWordGame({ onFinish, initialLevel, onSaveLevel }: { onFinish: (sco
  return (
  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md landscape:max-w-3xl flex flex-col items-center relative min-h-[400px] landscape:min-h-0 landscape:h-full landscape:justify-center">
  <div className="flex justify-between items-center w-full mb-2 sm:mb-4 px-4">
+ <div className="flex items-center gap-3 sm:gap-4">
  <div className="text-base sm:text-lg font-bold text-rose-600">{level}단계 / 50단계</div>
+ <div className="text-base sm:text-lg font-bold text-slate-500">{elapsedTime}초</div>
+ </div>
+ <div className="flex items-center gap-3 sm:gap-4">
  {score > 0 && (
  <button onClick={() => onFinish(score)} className="px-2 py-1 sm:px-3 sm:py-1.5 bg-slate-200 text-slate-700 rounded-full text-xs sm:text-sm font-bold hover:bg-slate-300 transition-colors shadow-sm">
  저장하고 끝내기
  </button>
  )}
  <div className="text-base sm:text-lg font-bold text-slate-600">점수: {score}</div>
+ </div>
  </div>
  
  {(isLevelClear || isGameOver) && (
